@@ -1,15 +1,9 @@
 """Use case for retrieving registered plants."""
 
-from typing import Protocol, Sequence
+from typing import Sequence
 
 from src.entities.plant import Plant
-
-
-class PlantRepository(Protocol):
-    """Contract required to retrieve plant information."""
-
-    def list_plants(self) -> Sequence[Plant]:
-        ...
+from src.use_cases.ports.plant_repository import PlantRepository
 
 
 class ListPlantsUseCase:
