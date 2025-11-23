@@ -5,20 +5,25 @@ API de demostración para gestionar plantas industriales, áreas, equipos y sist
 ## Arquitectura
 - **Entities (`src/entities/`)**: modelos de dominio inmutables para plantas, áreas, equipos y sistemas.
 - **Use cases (`src/use_cases/`)**: coordinan la lógica de aplicación mediante puertos de repositorio. Cada archivo implementa una operación puntual (listar, crear, actualizar, eliminar).
-- **Interface adapters (`src/interface_adapters/`)**: controladores FastAPI, presenters y gateways.
+- **Interface adapters (`src/interface_adapters/`)**: controladores (FastAPI y Flask), presenters y gateways.
 - **Infrastructure (`src/infrastructure/`)**: composición de la aplicación, middlewares, wiring de dependencias y acceso a base de datos.
 
 ## Ejecución local
 1. Crear y activar un entorno virtual (opcional pero recomendado).
 2. Instalar dependencias básicas:
    ```bash
-   pip install fastapi uvicorn SQLAlchemy PyMySQL
+   pip install fastapi uvicorn flask SQLAlchemy PyMySQL
    ```
-3. Iniciar el servidor en modo recarga:
+3. Iniciar el servidor en modo recarga (FastAPI):
    ```bash
    python run.py
    ```
 4. La API quedará disponible en `http://localhost:8000` y la documentación interactiva en `http://localhost:8000/docs`.
+
+### Servir con Flask
+- Entrypoint: `python run_flask.py`
+- Puerto por defecto: `http://localhost:5000`
+- Usa las mismas rutas bajo el prefijo `/api` y el mismo repositorio SQLAlchemy configurado por variables `DB_*`.
 
 ## Endpoints principales
 Las rutas siguen el contrato descrito en `docs/backend-endpoints.md` y devuelven cuerpos en español.
