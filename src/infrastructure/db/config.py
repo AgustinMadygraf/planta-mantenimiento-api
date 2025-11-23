@@ -1,9 +1,8 @@
 """Configuración de conexión a base de datos MySQL."""
 
 from dataclasses import dataclass
-import os
-from pathlib import Path
-from urllib.parse import quote_plus
+
+from src.shared.config import get_mysql_config, load_env
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +24,9 @@ class DBConfig:
     def url(self) -> str:
         """URL de conexión en formato mysql+pymysql."""
 
+        # Lazy import para evitar dependencia si no se usa MySQL
+        from urllib.parse import quote_plus
+
         encoded_password = quote_plus(self.password)
         return (
             f"mysql+pymysql://{self.user}:{encoded_password}@{self.host}:{self.port}/"
@@ -32,63 +34,37 @@ class DBConfig:
         )
 
 
-def _load_env_file(env_path: str = ".env") -> None:
-    """Carga un archivo .env básico en `os.environ` si existe.
+def load_db_config() -> DBConfig:
+    """Lee variables de entorno (o `.env`) y devuelve una configuración inmutable.
 
-    Evita añadir dependencias externas y tolera la ausencia del archivo. Si no
-    puede leerse, se lanza un RuntimeError para que la capa de infraestructura
-    pueda notificar al usuario.
+    Tolerante a la ausencia de `.env` y capaz de detectar valores numéricos
+    inválidos para avisar temprano a la capa de infraestructura.
     """
 
-    path = Path(env_path)
-
-    if not path.exists():
-        raise FileNotFoundError(f"No se encontró {env_path}")
-
     try:
-        for raw_line in path.read_text(encoding="utf-8").splitlines():
-            line = raw_line.strip()
-
-            if not line or line.startswith("#"):
-                continue
-
-            if "=" not in line:
-                continue
-
-            key, value = line.split("=", 1)
-            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-    except OSError as exc:  # problemas de permisos, encoding o disco
-        raise RuntimeError(f"No se pudo leer {env_path}: {exc}") from exc
-
-
-def load_db_config() -> DBConfig:
-    """Lee las variables de entorno y devuelve una configuración inmutable."""
-
-    try:
-        _load_env_file()
-    except FileNotFoundError:
-        # No es un error fatal: se usan variables de entorno del sistema o defaults.
-        pass
+        load_env()
     except RuntimeError as exc:
         raise RuntimeError(
             "No se pudieron cargar variables desde .env. Revisa permisos o encoding."
         ) from exc
 
+    values = get_mysql_config()
+
     try:
         return DBConfig(
-            host=os.getenv("DB_HOST", "localhost"),
-            port=int(os.getenv("DB_PORT", 3306)),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASSWORD", ""),
-            database=os.getenv("DB_NAME", "planta_mantenimiento"),
-            pool_size=int(os.getenv("DB_POOL_SIZE", 5)),
-            max_overflow=int(os.getenv("DB_MAX_OVERFLOW", 10)),
-            pool_timeout=int(os.getenv("DB_POOL_TIMEOUT", 30)),
-            pool_recycle=int(os.getenv("DB_POOL_RECYCLE", 1800)),
-            echo=os.getenv("DB_ECHO", "false").lower() in {"1", "true", "yes"},
+            host=values["host"] or "localhost",
+            port=int(values["port"]),
+            user=values["user"] or "root",
+            password=values["password"] or "",
+            database=values["database"] or "planta_mantenimiento",
+            pool_size=int(values["pool_size"]),
+            max_overflow=int(values["max_overflow"]),
+            pool_timeout=int(values["pool_timeout"]),
+            pool_recycle=int(values["pool_recycle"]),
+            echo=bool(values["echo"]),
         )
-    except ValueError as exc:
+    except (TypeError, ValueError, RuntimeError) as exc:
         raise RuntimeError(
-            "Variables de entorno DB_* inválidas. Asegúrate de que los valores numéricos"
-            " sean enteros (por ejemplo DB_PORT, DB_POOL_SIZE)."
+            "Variables de entorno DB_* inválidas. Asegúrate de que los valores numéricos sean enteros"
+            " (por ejemplo DB_PORT, DB_POOL_SIZE)."
         ) from exc

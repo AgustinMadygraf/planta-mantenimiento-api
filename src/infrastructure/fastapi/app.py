@@ -8,6 +8,9 @@ from src.interface_adapters.controllers.systems import build_router as build_sys
 from src.infrastructure.db.config import load_db_config
 from src.infrastructure.db.session import build_session_factory, create_engine_from_config
 from src.infrastructure.db.sqlalchemy_plant_repository import SqlAlchemyPlantRepository
+from src.shared.logger_fastapi import get_logger
+
+logger = get_logger("fastapi-app")
 
 
 def create_app() -> FastAPI:
@@ -27,9 +30,11 @@ def create_app() -> FastAPI:
     try:
         config = load_db_config()
     except RuntimeError as exc:
-        raise RuntimeError(
-            "No se pudo cargar la configuración de base de datos (revisa .env y variables DB_*)."
-        ) from exc
+        logger.error(
+            "No se pudo cargar la configuración de base de datos (revisa .env y variables DB_*).",
+            exc_info=exc,
+        )
+        raise
 
     engine = create_engine_from_config(config)
     session_factory = build_session_factory(engine)
