@@ -13,7 +13,13 @@ def create_app() -> Flask:
 
     flask_app = Flask(__name__)
 
-    config = load_db_config()
+    try:
+        config = load_db_config()
+    except RuntimeError as exc:
+        raise RuntimeError(
+            "No se pudo cargar la configuración de base de datos (revisa .env y variables DB_*)."
+        ) from exc
+
     engine = create_engine_from_config(config)
     session_factory = build_session_factory(engine)
     repository = SqlAlchemyPlantRepository(session_factory)

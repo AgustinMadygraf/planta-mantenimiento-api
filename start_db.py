@@ -10,7 +10,17 @@ from src.infrastructure.db.session import create_engine_from_config
 
 
 def main() -> None:
-    config = load_db_config()
+    try:
+        config = load_db_config()
+    except RuntimeError as exc:  # problemas al leer .env o castear valores
+        print(
+            "No se pudo cargar la configuración de base de datos.",
+            "Revisa que exista el archivo .env o que los valores DB_* sean válidos.",
+            f"Detalle: {exc}",
+            sep="\n",
+        )
+        sys.exit(1)
+
     engine = create_engine_from_config(config)
 
     try:

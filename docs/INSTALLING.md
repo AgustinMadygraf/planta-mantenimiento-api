@@ -28,6 +28,8 @@ pip install fastapi uvicorn flask SQLAlchemy PyMySQL
    - Parámetros de pool (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`, `DB_POOL_RECYCLE`)
    - Opcional: `DB_ECHO=true` para ver SQL generado.
 
+Si `.env` no existe, la aplicación usará valores por defecto y mostrará una advertencia; si algún `DB_*` no es un número válido, el arranque detendrá con un mensaje explicativo.
+
 > Si ves errores como `Access denied for user 'root'@'localhost'`, revisa `DB_USER/DB_PASSWORD` y los permisos de MySQL.
 
 ## 4) Crear tablas sin migraciones
