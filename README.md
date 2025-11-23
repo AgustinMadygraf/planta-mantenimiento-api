@@ -14,11 +14,14 @@ API de demostración para gestionar plantas industriales, áreas, equipos y sist
    ```bash
    pip install fastapi uvicorn flask SQLAlchemy PyMySQL
    ```
-3. Iniciar el servidor en modo recarga (FastAPI):
+3. Copiar `env.example` a `.env` y ajustar credenciales MySQL si es necesario.
+4. Iniciar el servidor en modo recarga (FastAPI):
    ```bash
    python run.py
    ```
-4. La API quedará disponible en `http://localhost:8000` y la documentación interactiva en `http://localhost:8000/docs`.
+5. La API quedará disponible en `http://localhost:8000` y la documentación interactiva en `http://localhost:8000/docs`.
+
+Más detalles de instalación (entorno, variables `DB_*`, creación de tablas y ejecución con Flask) se describen en `docs/INSTALLING.md`.
 
 ### Servir con Flask
 - Entrypoint: `python run_flask.py`
