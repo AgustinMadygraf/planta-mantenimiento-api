@@ -23,6 +23,7 @@ API de demostración para gestionar plantas industriales, áreas, equipos y sist
 5. La API quedará disponible en `http://localhost:8000` y la documentación interactiva en `http://localhost:8000/docs`.
 
 Más detalles de instalación (entorno, variables `DB_*`, creación de tablas y ejecución con Flask) se describen en `docs/INSTALLING.md`.
+- Para generar un diagrama ER desde los modelos declarativos (sin depender de la base), instala `eralchemy2` y `graphviz`, y ejecuta `python scripts/generate_erd.py` (produce `docs/er_diagram.png`).
 
 ### Servir con Flask
 - Entrypoint: `python run_flask.py`

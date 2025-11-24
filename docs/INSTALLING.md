@@ -45,3 +45,13 @@ El script capturará errores de conexión y mostrará mensajes en español con l
 - **Flask**: `python run_flask.py` (puerto 5000 por defecto)
 
 Ambos entrypoints comparten el mismo repositorio SQLAlchemy y respetan las variables `DB_*` configuradas.
+
+## 6) Generar diagrama ER (opcional)
+Si quieres visualizar el modelo entidad-relación:
+
+1. Instala las dependencias opcionales: `pip install eralchemy2 graphviz` y asegúrate de que `dot` esté en tu `PATH`.
+2. Ejecuta el script:
+   ```bash
+   python scripts/generate_erd.py
+   ```
+   Por defecto genera `docs/er_diagram.png` a partir del metadata declarativo. Si defines `DB_URL`, reflejará el esquema real de la base indicada.
