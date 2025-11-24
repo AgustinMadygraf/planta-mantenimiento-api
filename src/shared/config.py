@@ -114,4 +114,16 @@ def get_config() -> Dict[str, Any]:
         "MYSQL_PASSWORD": get_env("MYSQL_PASSWORD"),
         "MYSQL_DATABASE": get_env("MYSQL_DATABASE"),
         "API_BASE": get_env("API_BASE"),
+        "CORS_ORIGINS": get_env("CORS_ORIGINS"),
     }
+
+
+def get_cors_origins(default: str = "http://localhost:5173") -> list[str]:
+    """Devuelve una lista de orígenes permitidos para CORS."""
+
+    origins = get_env("CORS_ORIGINS")
+
+    if not origins:
+        return [default]
+
+    return [origin.strip() for origin in origins.split(",") if origin.strip()]

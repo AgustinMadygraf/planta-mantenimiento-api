@@ -27,6 +27,7 @@ pip install fastapi uvicorn flask SQLAlchemy PyMySQL
    - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
    - Parámetros de pool (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`, `DB_POOL_RECYCLE`)
    - Opcional: `DB_ECHO=true` para ver SQL generado.
+   - Opcional: `CORS_ORIGINS` (lista separada por comas) para permitir tu front-end, por defecto `http://localhost:5173`.
 
 Si `.env` no existe, la aplicación usará valores por defecto y mostrará una advertencia; si algún `DB_*` no es un número válido, el arranque detendrá con un mensaje explicativo.
 

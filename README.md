@@ -15,6 +15,7 @@ API de demostración para gestionar plantas industriales, áreas, equipos y sist
    pip install fastapi uvicorn flask SQLAlchemy PyMySQL
    ```
 3. Copiar `env.example` a `.env` y ajustar credenciales MySQL si es necesario.
+   - Si usas un frontend en otro origen, ajusta `CORS_ORIGINS` (lista separada por comas). Por defecto se permite `http://localhost:5173`.
 4. Iniciar el servidor en modo recarga (FastAPI):
    ```bash
    python run.py

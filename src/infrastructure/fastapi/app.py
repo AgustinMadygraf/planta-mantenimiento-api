@@ -8,6 +8,7 @@ from src.interface_adapters.controllers.systems import build_router as build_sys
 from src.infrastructure.db.config import load_db_config
 from src.infrastructure.db.session import build_session_factory, create_engine_from_config
 from src.infrastructure.db.sqlalchemy_plant_repository import SqlAlchemyPlantRepository
+from src.shared.config import get_cors_origins
 from src.shared.logger_fastapi import get_logger
 
 logger = get_logger("fastapi-app")
@@ -19,9 +20,11 @@ def create_app() -> FastAPI:
     fastapi_app = FastAPI(title="Gestión de Activos API", version="0.1.0")
 
     # Permite que el frontend en localhost consuma la API durante el desarrollo.
+    cors_origins = get_cors_origins()
+
     fastapi_app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
