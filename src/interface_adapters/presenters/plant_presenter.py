@@ -8,9 +8,9 @@ from src.entities.plant import Plant
 def present(plant: Plant) -> dict[str, str | int]:
     return {
         "id": plant.id,
-        "name": plant.name,
-        "location": plant.location,
-        "status": plant.status,
+        "nombre": plant.name,
+        "ubicacion": plant.location,
+        "estado": plant.status,
     }
 
 
