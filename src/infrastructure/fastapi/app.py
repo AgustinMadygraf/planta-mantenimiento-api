@@ -5,9 +5,9 @@ from src.interface_adapters.controllers.areas import build_router as build_areas
 from src.interface_adapters.controllers.equipment import build_router as build_equipment_router
 from src.interface_adapters.controllers.plants import build_router as build_plants_router
 from src.interface_adapters.controllers.systems import build_router as build_systems_router
-from src.infrastructure.db.config import load_db_config
-from src.infrastructure.db.session import build_session_factory, create_engine_from_config
-from src.infrastructure.db.sqlalchemy_plant_repository import SqlAlchemyPlantRepository
+from src.infrastructure.sqlalchemy.config import load_db_config
+from src.infrastructure.sqlalchemy.session import build_session_factory, create_engine_from_config
+from src.infrastructure.sqlalchemy.sqlalchemy_plant_repository import SqlAlchemyPlantRepository
 from src.shared.config import get_cors_origins
 from src.shared.logger_fastapi import get_logger
 

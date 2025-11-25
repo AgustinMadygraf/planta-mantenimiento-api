@@ -4,9 +4,9 @@ import sys
 
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
-from src.infrastructure.db.config import load_db_config
-from src.infrastructure.db.models import Base
-from src.infrastructure.db.session import create_engine_from_config
+from src.infrastructure.sqlalchemy.config import load_db_config
+from src.infrastructure.sqlalchemy.models import Base
+from src.infrastructure.sqlalchemy.session import create_engine_from_config
 from src.shared.logger_fastapi import get_logger
 
 logger = get_logger("start_db")

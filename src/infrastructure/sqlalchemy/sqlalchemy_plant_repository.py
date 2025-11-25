@@ -12,7 +12,7 @@ from src.entities.equipment import Equipment
 from src.entities.plant import Plant
 from src.entities.system import System
 from src.use_cases.ports.plant_repository import PlantRepository
-from src.infrastructure.db.models import AreaModel, EquipmentModel, PlantModel, SystemModel
+from src.infrastructure.sqlalchemy.models import AreaModel, EquipmentModel, PlantModel, SystemModel
 
 
 class SqlAlchemyPlantRepository(PlantRepository):

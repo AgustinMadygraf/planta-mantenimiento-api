@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.infrastructure.db.config import DBConfig
+from src.infrastructure.sqlalchemy.config import DBConfig
 
 
 def create_engine_from_config(config: DBConfig) -> Engine:

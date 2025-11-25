@@ -1,8 +1,8 @@
 from flask import Flask, request
 
-from src.infrastructure.db.config import load_db_config
-from src.infrastructure.db.session import build_session_factory, create_engine_from_config
-from src.infrastructure.db.sqlalchemy_plant_repository import SqlAlchemyPlantRepository
+from src.infrastructure.sqlalchemy.config import load_db_config
+from src.infrastructure.sqlalchemy.session import build_session_factory, create_engine_from_config
+from src.infrastructure.sqlalchemy.sqlalchemy_plant_repository import SqlAlchemyPlantRepository
 from src.interface_adapters.controllers.flask_routes import build_blueprint
 from src.shared.config import get_cors_origins
 from src.shared.logger_fastapi import get_logger
