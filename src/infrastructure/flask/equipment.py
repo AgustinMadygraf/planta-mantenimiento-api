@@ -6,7 +6,9 @@ from flask import Blueprint, jsonify
 from werkzeug.exceptions import BadRequest, NotFound
 
 from src.infrastructure.flask.helpers import _require_fields, _require_json
-from src.interface_adapters.presenters.equipment_presenter import present as present_equipment
+from src.interface_adapters.presenters.equipment_presenter import (
+    present as present_equipment,
+)
 from src.interface_adapters.presenters.system_presenter import (
     present as present_system,
     present_many as present_systems,
