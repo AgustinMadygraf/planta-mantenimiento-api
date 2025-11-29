@@ -1,7 +1,7 @@
 import unittest
 
-from src.interface_adapters.gateways.sqlalchemy import mappers
-from src.interface_adapters.gateways.sqlalchemy.models import (
+from src.infrastructure.sqlalchemy import mappers
+from src.infrastructure.sqlalchemy.models import (
     AreaModel,
     EquipmentModel,
     PlantModel,

@@ -3,8 +3,8 @@ import unittest
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from src.interface_adapters.gateways.sqlalchemy.models import Base, PlantModel
-from src.interface_adapters.gateways.sqlalchemy.unit_of_work import SqlAlchemyUnitOfWork
+from src.infrastructure.sqlalchemy.models import Base, PlantModel
+from src.infrastructure.sqlalchemy.unit_of_work import SqlAlchemyUnitOfWork
 
 
 class SqlAlchemyUnitOfWorkTestCase(unittest.TestCase):

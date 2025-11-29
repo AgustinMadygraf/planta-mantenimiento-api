@@ -1,6 +1,4 @@
-"""
-Path: src/interface_adapters/controllers/flask_routes.py
-"""
+"""Rutas HTTP basadas en Flask ubicadas en infraestructura."""
 
 from __future__ import annotations
 

@@ -12,8 +12,8 @@ from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.plant import Plant
 from src.entities.system import System
-from src.interface_adapters.gateways.sqlalchemy import mappers
-from src.interface_adapters.gateways.sqlalchemy.models import (
+from src.infrastructure.sqlalchemy import mappers
+from src.infrastructure.sqlalchemy.models import (
     AreaModel,
     EquipmentModel,
     PlantModel,
