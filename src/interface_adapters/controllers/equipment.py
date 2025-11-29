@@ -1,6 +1,6 @@
 """HTTP controller for equipment endpoints."""
 
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from src.interface_adapters.presenters.equipment_presenter import present as present_equipment
 from src.interface_adapters.presenters.system_presenter import present_many as present_systems
 from src.use_cases.ports.plant_repository import PlantDataRepository
+from src.use_cases.ports.unit_of_work import UnitOfWork
 from src.use_cases.create_system import CreateSystemUseCase
 from src.use_cases.delete_equipment import DeleteEquipmentUseCase
 from src.use_cases.get_equipment import GetEquipmentUseCase
@@ -30,14 +31,16 @@ def _dump_payload(model: BaseModel) -> dict[str, Any]:
     return model.dict(exclude_unset=True)
 
 
-def build_router(repository: PlantDataRepository) -> APIRouter:
+def build_router(
+    repository: PlantDataRepository, uow_factory: Callable[[], UnitOfWork]
+) -> APIRouter:
     router = APIRouter(prefix="/api/equipos", tags=["Equipos"])
 
     get_equipment_use_case = GetEquipmentUseCase(repository)
-    update_equipment_use_case = UpdateEquipmentUseCase(repository)
-    delete_equipment_use_case = DeleteEquipmentUseCase(repository)
+    update_equipment_use_case = UpdateEquipmentUseCase(repository, uow_factory)
+    delete_equipment_use_case = DeleteEquipmentUseCase(repository, uow_factory)
     list_equipment_systems_use_case = ListEquipmentSystemsUseCase(repository)
-    create_system_use_case = CreateSystemUseCase(repository)
+    create_system_use_case = CreateSystemUseCase(repository, uow_factory)
 
     @router.put("/{equipment_id}", summary="Actualiza un equipo")
     async def update_equipment(equipment_id: int, payload: EquipmentUpdatePayload) -> dict[str, int | str]:

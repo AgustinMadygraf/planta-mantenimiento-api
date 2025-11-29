@@ -5,7 +5,7 @@ y la infraestructura de persistencia, permitiendo que cada caso de uso dependa
 solo de los métodos que necesita.
 """
 
-from typing import Protocol, Sequence
+from typing import Any, Protocol, Sequence
 
 from src.entities.area import Area
 from src.entities.equipment import Equipment
@@ -16,10 +16,10 @@ from src.entities.system import System
 class PlantRepository(Protocol):
     """Expose only plant operations needed by the use cases."""
 
-    def list_plants(self) -> Sequence[Plant]:
+    def list_plants(self, *, session: Any | None = None) -> Sequence[Plant]:
         ...
 
-    def get_plant(self, plant_id: int) -> Plant | None:
+    def get_plant(self, plant_id: int, *, session: Any | None = None) -> Plant | None:
         ...
 
     def create_plant(
@@ -28,6 +28,7 @@ class PlantRepository(Protocol):
         name: str,
         location: str | None = None,
         status: str | None = None,
+        session: Any | None = None,
     ) -> Plant:
         ...
 
@@ -38,20 +39,21 @@ class PlantRepository(Protocol):
         name: str | None = None,
         location: str | None = None,
         status: str | None = None,
+        session: Any | None = None,
     ) -> Plant | None:
         ...
 
-    def delete_plant(self, plant_id: int) -> bool:
+    def delete_plant(self, plant_id: int, *, session: Any | None = None) -> bool:
         ...
 
 
 class AreaRepository(Protocol):
     """Contract for manipulating areas within a plant."""
 
-    def list_areas(self, plant_id: int) -> Sequence[Area]:
+    def list_areas(self, plant_id: int, *, session: Any | None = None) -> Sequence[Area]:
         ...
 
-    def get_area(self, area_id: int) -> Area | None:
+    def get_area(self, area_id: int, *, session: Any | None = None) -> Area | None:
         ...
 
     def create_area(
@@ -60,6 +62,7 @@ class AreaRepository(Protocol):
         *,
         name: str,
         status: str | None = None,
+        session: Any | None = None,
     ) -> Area | None:
         ...
 
@@ -69,20 +72,21 @@ class AreaRepository(Protocol):
         *,
         name: str | None = None,
         status: str | None = None,
+        session: Any | None = None,
     ) -> Area | None:
         ...
 
-    def delete_area(self, area_id: int) -> bool:
+    def delete_area(self, area_id: int, *, session: Any | None = None) -> bool:
         ...
 
 
 class EquipmentRepository(Protocol):
     """Contract for working with equipment of an area."""
 
-    def list_equipment(self, area_id: int) -> Sequence[Equipment]:
+    def list_equipment(self, area_id: int, *, session: Any | None = None) -> Sequence[Equipment]:
         ...
 
-    def get_equipment(self, equipment_id: int) -> Equipment | None:
+    def get_equipment(self, equipment_id: int, *, session: Any | None = None) -> Equipment | None:
         ...
 
     def create_equipment(
@@ -91,6 +95,7 @@ class EquipmentRepository(Protocol):
         *,
         name: str,
         status: str | None = None,
+        session: Any | None = None,
     ) -> Equipment | None:
         ...
 
@@ -100,20 +105,21 @@ class EquipmentRepository(Protocol):
         *,
         name: str | None = None,
         status: str | None = None,
+        session: Any | None = None,
     ) -> Equipment | None:
         ...
 
-    def delete_equipment(self, equipment_id: int) -> bool:
+    def delete_equipment(self, equipment_id: int, *, session: Any | None = None) -> bool:
         ...
 
 
 class SystemRepository(Protocol):
     """Contract for managing systems linked to equipment."""
 
-    def list_systems(self, equipment_id: int) -> Sequence[System]:
+    def list_systems(self, equipment_id: int, *, session: Any | None = None) -> Sequence[System]:
         ...
 
-    def get_system(self, system_id: int) -> System | None:
+    def get_system(self, system_id: int, *, session: Any | None = None) -> System | None:
         ...
 
     def create_system(
@@ -122,6 +128,7 @@ class SystemRepository(Protocol):
         *,
         name: str,
         status: str | None = None,
+        session: Any | None = None,
     ) -> System | None:
         ...
 
@@ -131,10 +138,11 @@ class SystemRepository(Protocol):
         *,
         name: str | None = None,
         status: str | None = None,
+        session: Any | None = None,
     ) -> System | None:
         ...
 
-    def delete_system(self, system_id: int) -> bool:
+    def delete_system(self, system_id: int, *, session: Any | None = None) -> bool:
         ...
 
 

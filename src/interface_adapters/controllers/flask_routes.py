@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from flask import Blueprint, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
@@ -36,6 +36,7 @@ from src.use_cases.list_equipment_systems import ListEquipmentSystemsUseCase
 from src.use_cases.list_plant_areas import ListPlantAreasUseCase
 from src.use_cases.list_plants import ListPlantsUseCase
 from src.use_cases.ports.plant_repository import PlantDataRepository
+from src.use_cases.ports.unit_of_work import UnitOfWork
 from src.use_cases.update_area import UpdateAreaUseCase
 from src.use_cases.update_equipment import UpdateEquipmentUseCase
 from src.use_cases.update_plant import UpdatePlantUseCase
@@ -64,7 +65,9 @@ def _require_fields(payload: dict[str, Any], required: list[str]) -> None:
         raise BadRequest(f"Faltan campos obligatorios: {', '.join(missing)}")
 
 
-def build_blueprint(repository: PlantDataRepository) -> Blueprint:
+def build_blueprint(
+    repository: PlantDataRepository, uow_factory: Callable[[], UnitOfWork]
+) -> Blueprint:
     api_bp = Blueprint("api", __name__, url_prefix="/api")
 
     @api_bp.errorhandler(BadRequest)
@@ -77,27 +80,27 @@ def build_blueprint(repository: PlantDataRepository) -> Blueprint:
 
     list_plants_use_case = ListPlantsUseCase(repository)
     get_plant_use_case = GetPlantUseCase(repository)
-    create_plant_use_case = CreatePlantUseCase(repository)
-    update_plant_use_case = UpdatePlantUseCase(repository)
-    delete_plant_use_case = DeletePlantUseCase(repository)
+    create_plant_use_case = CreatePlantUseCase(repository, uow_factory)
+    update_plant_use_case = UpdatePlantUseCase(repository, uow_factory)
+    delete_plant_use_case = DeletePlantUseCase(repository, uow_factory)
     list_plant_areas_use_case = ListPlantAreasUseCase(repository)
-    create_area_use_case = CreateAreaUseCase(repository)
+    create_area_use_case = CreateAreaUseCase(repository, uow_factory)
 
     get_area_use_case = GetAreaUseCase(repository)
-    update_area_use_case = UpdateAreaUseCase(repository)
-    delete_area_use_case = DeleteAreaUseCase(repository)
+    update_area_use_case = UpdateAreaUseCase(repository, uow_factory)
+    delete_area_use_case = DeleteAreaUseCase(repository, uow_factory)
     list_area_equipment_use_case = ListAreaEquipmentUseCase(repository)
-    create_equipment_use_case = CreateEquipmentUseCase(repository)
+    create_equipment_use_case = CreateEquipmentUseCase(repository, uow_factory)
 
     get_equipment_use_case = GetEquipmentUseCase(repository)
-    update_equipment_use_case = UpdateEquipmentUseCase(repository)
-    delete_equipment_use_case = DeleteEquipmentUseCase(repository)
+    update_equipment_use_case = UpdateEquipmentUseCase(repository, uow_factory)
+    delete_equipment_use_case = DeleteEquipmentUseCase(repository, uow_factory)
     list_equipment_systems_use_case = ListEquipmentSystemsUseCase(repository)
-    create_system_use_case = CreateSystemUseCase(repository)
+    create_system_use_case = CreateSystemUseCase(repository, uow_factory)
 
     get_system_use_case = GetSystemUseCase(repository)
-    update_system_use_case = UpdateSystemUseCase(repository)
-    delete_system_use_case = DeleteSystemUseCase(repository)
+    update_system_use_case = UpdateSystemUseCase(repository, uow_factory)
+    delete_system_use_case = DeleteSystemUseCase(repository, uow_factory)
 
     @api_bp.get("/plantas")
     def list_plants():

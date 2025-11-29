@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from contextlib import contextmanager
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
@@ -27,15 +28,33 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
     def __init__(self, session_factory: sessionmaker[Session]) -> None:
         self._session_factory = session_factory
 
+    @contextmanager
+    def _session_scope(self, session: Session | None):
+        if session is not None:
+            yield session
+        else:
+            with self._session_factory() as new_session:
+                yield new_session
+
+    @contextmanager
+    def _transactional_scope(self, session: Session | None):
+        if session is not None:
+            yield session
+        else:
+            with self._session_factory() as new_session, new_session.begin():
+                yield new_session
+
     # Plant operations
-    def list_plants(self) -> Sequence[Plant]:
-        with self._session_factory() as session:
-            rows = session.execute(select(PlantModel)).scalars().all()
+    def list_plants(self, *, session: Session | None = None) -> Sequence[Plant]:
+        with self._session_scope(session) as db:
+            rows = db.execute(select(PlantModel)).scalars().all()
             return [mappers.plant_to_entity(row) for row in rows]
 
-    def get_plant(self, plant_id: int) -> Plant | None:
-        with self._session_factory() as session:
-            plant = session.get(PlantModel, plant_id)
+    def get_plant(
+        self, plant_id: int, *, session: Session | None = None
+    ) -> Plant | None:
+        with self._session_scope(session) as db:
+            plant = db.get(PlantModel, plant_id)
             if plant is None:
                 return None
             return mappers.plant_to_entity(plant)
@@ -46,11 +65,12 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         name: str,
         location: str | None = None,
         status: str | None = None,
+        session: Session | None = None,
     ) -> Plant:
-        with self._session_factory() as session, session.begin():
+        with self._transactional_scope(session) as db:
             plant = PlantModel(name=name, location=location, status=status or "operativa")
-            session.add(plant)
-            session.flush()
+            db.add(plant)
+            db.flush()
             return mappers.plant_to_entity(plant)
 
     def update_plant(
@@ -60,9 +80,10 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         name: str | None = None,
         location: str | None = None,
         status: str | None = None,
+        session: Session | None = None,
     ) -> Plant | None:
-        with self._session_factory() as session, session.begin():
-            plant = session.get(PlantModel, plant_id)
+        with self._transactional_scope(session) as db:
+            plant = db.get(PlantModel, plant_id)
             if plant is None:
                 return None
 
@@ -73,29 +94,29 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
             if status is not None:
                 plant.status = status
 
-            session.flush()
+            db.flush()
             return mappers.plant_to_entity(plant)
 
-    def delete_plant(self, plant_id: int) -> bool:
-        with self._session_factory() as session, session.begin():
-            plant = session.get(PlantModel, plant_id)
+    def delete_plant(self, plant_id: int, *, session: Session | None = None) -> bool:
+        with self._transactional_scope(session) as db:
+            plant = db.get(PlantModel, plant_id)
             if plant is None:
                 return False
 
-            session.delete(plant)
+            db.delete(plant)
             return True
 
     # Area operations
-    def list_areas(self, plant_id: int) -> Sequence[Area]:
-        with self._session_factory() as session:
-            rows = session.execute(
-                select(AreaModel).where(AreaModel.plant_id == plant_id)
-            ).scalars()
+    def list_areas(
+        self, plant_id: int, *, session: Session | None = None
+    ) -> Sequence[Area]:
+        with self._session_scope(session) as db:
+            rows = db.execute(select(AreaModel).where(AreaModel.plant_id == plant_id)).scalars()
             return [mappers.area_to_entity(row) for row in rows]
 
-    def get_area(self, area_id: int) -> Area | None:
-        with self._session_factory() as session:
-            area = session.get(AreaModel, area_id)
+    def get_area(self, area_id: int, *, session: Session | None = None) -> Area | None:
+        with self._session_scope(session) as db:
+            area = db.get(AreaModel, area_id)
             if area is None:
                 return None
             return mappers.area_to_entity(area)
@@ -106,15 +127,16 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
+        session: Session | None = None,
     ) -> Area | None:
-        with self._session_factory() as session, session.begin():
-            plant = session.get(PlantModel, plant_id)
+        with self._transactional_scope(session) as db:
+            plant = db.get(PlantModel, plant_id)
             if plant is None:
                 return None
 
             area = AreaModel(plant_id=plant.id, name=name, status=status or "operativa")
-            session.add(area)
-            session.flush()
+            db.add(area)
+            db.flush()
             return mappers.area_to_entity(area)
 
     def update_area(
@@ -123,9 +145,10 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
+        session: Session | None = None,
     ) -> Area | None:
-        with self._session_factory() as session, session.begin():
-            area = session.get(AreaModel, area_id)
+        with self._transactional_scope(session) as db:
+            area = db.get(AreaModel, area_id)
             if area is None:
                 return None
 
@@ -134,29 +157,33 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
             if status is not None:
                 area.status = status
 
-            session.flush()
+            db.flush()
             return mappers.area_to_entity(area)
 
-    def delete_area(self, area_id: int) -> bool:
-        with self._session_factory() as session, session.begin():
-            area = session.get(AreaModel, area_id)
+    def delete_area(self, area_id: int, *, session: Session | None = None) -> bool:
+        with self._transactional_scope(session) as db:
+            area = db.get(AreaModel, area_id)
             if area is None:
                 return False
 
-            session.delete(area)
+            db.delete(area)
             return True
 
     # Equipment operations
-    def list_equipment(self, area_id: int) -> Sequence[Equipment]:
-        with self._session_factory() as session:
-            rows = session.execute(
+    def list_equipment(
+        self, area_id: int, *, session: Session | None = None
+    ) -> Sequence[Equipment]:
+        with self._session_scope(session) as db:
+            rows = db.execute(
                 select(EquipmentModel).where(EquipmentModel.area_id == area_id)
             ).scalars()
             return [mappers.equipment_to_entity(row) for row in rows]
 
-    def get_equipment(self, equipment_id: int) -> Equipment | None:
-        with self._session_factory() as session:
-            equipment = session.get(EquipmentModel, equipment_id)
+    def get_equipment(
+        self, equipment_id: int, *, session: Session | None = None
+    ) -> Equipment | None:
+        with self._session_scope(session) as db:
+            equipment = db.get(EquipmentModel, equipment_id)
             if equipment is None:
                 return None
             return mappers.equipment_to_entity(equipment)
@@ -167,17 +194,18 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
+        session: Session | None = None,
     ) -> Equipment | None:
-        with self._session_factory() as session, session.begin():
-            area = session.get(AreaModel, area_id)
+        with self._transactional_scope(session) as db:
+            area = db.get(AreaModel, area_id)
             if area is None:
                 return None
 
             equipment = EquipmentModel(
                 area_id=area.id, name=name, status=status or "operativo"
             )
-            session.add(equipment)
-            session.flush()
+            db.add(equipment)
+            db.flush()
             return mappers.equipment_to_entity(equipment)
 
     def update_equipment(
@@ -186,9 +214,10 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
+        session: Session | None = None,
     ) -> Equipment | None:
-        with self._session_factory() as session, session.begin():
-            equipment = session.get(EquipmentModel, equipment_id)
+        with self._transactional_scope(session) as db:
+            equipment = db.get(EquipmentModel, equipment_id)
             if equipment is None:
                 return None
 
@@ -197,29 +226,35 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
             if status is not None:
                 equipment.status = status
 
-            session.flush()
+            db.flush()
             return mappers.equipment_to_entity(equipment)
 
-    def delete_equipment(self, equipment_id: int) -> bool:
-        with self._session_factory() as session, session.begin():
-            equipment = session.get(EquipmentModel, equipment_id)
+    def delete_equipment(
+        self, equipment_id: int, *, session: Session | None = None
+    ) -> bool:
+        with self._transactional_scope(session) as db:
+            equipment = db.get(EquipmentModel, equipment_id)
             if equipment is None:
                 return False
 
-            session.delete(equipment)
+            db.delete(equipment)
             return True
 
     # System operations
-    def list_systems(self, equipment_id: int) -> Sequence[System]:
-        with self._session_factory() as session:
-            rows = session.execute(
+    def list_systems(
+        self, equipment_id: int, *, session: Session | None = None
+    ) -> Sequence[System]:
+        with self._session_scope(session) as db:
+            rows = db.execute(
                 select(SystemModel).where(SystemModel.equipment_id == equipment_id)
             ).scalars()
             return [mappers.system_to_entity(row) for row in rows]
 
-    def get_system(self, system_id: int) -> System | None:
-        with self._session_factory() as session:
-            system = session.get(SystemModel, system_id)
+    def get_system(
+        self, system_id: int, *, session: Session | None = None
+    ) -> System | None:
+        with self._session_scope(session) as db:
+            system = db.get(SystemModel, system_id)
             if system is None:
                 return None
             return mappers.system_to_entity(system)
@@ -230,17 +265,18 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
+        session: Session | None = None,
     ) -> System | None:
-        with self._session_factory() as session, session.begin():
-            equipment = session.get(EquipmentModel, equipment_id)
+        with self._transactional_scope(session) as db:
+            equipment = db.get(EquipmentModel, equipment_id)
             if equipment is None:
                 return None
 
             system = SystemModel(
                 equipment_id=equipment.id, name=name, status=status or "operativo"
             )
-            session.add(system)
-            session.flush()
+            db.add(system)
+            db.flush()
             return mappers.system_to_entity(system)
 
     def update_system(
@@ -249,9 +285,10 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
+        session: Session | None = None,
     ) -> System | None:
-        with self._session_factory() as session, session.begin():
-            system = session.get(SystemModel, system_id)
+        with self._transactional_scope(session) as db:
+            system = db.get(SystemModel, system_id)
             if system is None:
                 return None
 
@@ -260,14 +297,14 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
             if status is not None:
                 system.status = status
 
-            session.flush()
+            db.flush()
             return mappers.system_to_entity(system)
 
-    def delete_system(self, system_id: int) -> bool:
-        with self._session_factory() as session, session.begin():
-            system = session.get(SystemModel, system_id)
+    def delete_system(self, system_id: int, *, session: Session | None = None) -> bool:
+        with self._transactional_scope(session) as db:
+            system = db.get(SystemModel, system_id)
             if system is None:
                 return False
 
-            session.delete(system)
+            db.delete(system)
             return True

@@ -5,10 +5,12 @@ Este documento resume hallazgos sobre la capa `src/infrastructure/sqlalchemy` y 
 ## Avance reciente
 - Se movió la implementación SQLAlchemy al gateway `interface_adapters/gateways/sqlalchemy/plant_repository.py`, manteniendo reexports retrocompatibles en `src/infrastructure/sqlalchemy`. Esto elimina dependencias directas de infraestructura en controladores y arranques de framework. 【F:src/interface_adapters/gateways/sqlalchemy/plant_repository.py†L1-L273】
 - El contrato de acceso a datos ahora está segmentado por agregado (planta, área, equipo, sistema) en `src/use_cases/ports/plant_repository.py`, de modo que cada caso de uso consume solo lo que necesita. 【F:src/use_cases/ports/plant_repository.py†L1-L155】
+- Se incorporó un Unit of Work SQLAlchemy (`SqlAlchemyUnitOfWork`) para compartir una misma sesión/transacción entre operaciones dentro de un caso de uso. 【F:src/interface_adapters/gateways/sqlalchemy/unit_of_work.py†L1-L57】【F:src/use_cases/create_plant.py†L1-L23】
+- Las entidades de dominio dejaron de ser dataclasses anémicas para validar invariantes básicas y exponer comportamientos (`activate`, `change_status`, etc.). 【F:src/entities/plant.py†L1-L39】【F:src/entities/equipment.py†L1-L40】
+- Se añadieron pruebas unitarias aisladas para los mapeos SQLAlchemy → entidades y para el ciclo de vida transaccional del Unit of Work usando SQLite en memoria. 【F:tests/test_sqlalchemy_mappers.py†L1-L53】【F:tests/test_unit_of_work.py†L1-L44】
 
 ### Pendiente
-- Introducir un Unit of Work transaccional; hoy cada método abre su propia sesión y transacción, dificultando operaciones compuestas. 【F:src/interface_adapters/gateways/sqlalchemy/plant_repository.py†L27-L273】
-- Enriquecer las entidades de dominio (actualmente dataclasses anémicas) para capturar reglas e invariantes. 【F:src/entities/plant.py†L1-L11】
+- Extender la cobertura de pruebas a casos de uso completos (incluyendo rutas de FastAPI/Flask) y a validaciones de entidades más complejas.
 
 ## Diagnóstico actual (alto nivel)
 - Las entidades de dominio se modelan como `dataclass` inmutables, pero los mapeos ORM (`PlantModel`, `AreaModel`, etc.) se definen junto con el repositorio concreto en la misma capa, generando acoplamiento fuerte entre dominio y persistencia. 

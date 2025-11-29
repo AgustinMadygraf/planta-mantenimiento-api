@@ -49,10 +49,10 @@ class InMemoryPlantRepository(PlantDataRepository):
         }
 
     # Plant operations
-    def list_plants(self) -> Sequence[Plant]:
+    def list_plants(self, *, session: object | None = None) -> Sequence[Plant]:
         return list(self._plants.values())
 
-    def get_plant(self, plant_id: int) -> Plant | None:
+    def get_plant(self, plant_id: int, *, session: object | None = None) -> Plant | None:
         return self._plants.get(plant_id)
 
     def create_plant(
@@ -61,6 +61,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         name: str,
         location: str | None = None,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> Plant:
         new_id = max(self._plants.keys(), default=0) + 1
         plant = Plant(
@@ -79,6 +81,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         name: str | None = None,
         location: str | None = None,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> Plant | None:
         current = self._plants.get(plant_id)
         if current is None:
@@ -94,7 +98,7 @@ class InMemoryPlantRepository(PlantDataRepository):
         self._plants[plant_id] = updated
         return updated
 
-    def delete_plant(self, plant_id: int) -> bool:
+    def delete_plant(self, plant_id: int, *, session: object | None = None) -> bool:
         if plant_id not in self._plants:
             return False
 
@@ -106,10 +110,10 @@ class InMemoryPlantRepository(PlantDataRepository):
         return True
 
     # Area operations
-    def list_areas(self, plant_id: int) -> Sequence[Area]:
+    def list_areas(self, plant_id: int, *, session: object | None = None) -> Sequence[Area]:
         return list(self._areas.get(plant_id, ()))
 
-    def get_area(self, area_id: int) -> Area | None:
+    def get_area(self, area_id: int, *, session: object | None = None) -> Area | None:
         for areas in self._areas.values():
             for area in areas:
                 if area.id == area_id:
@@ -122,6 +126,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> Area | None:
         plant = self._plants.get(plant_id)
         if plant is None:
@@ -145,6 +151,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> Area | None:
         for plant_id, areas in self._areas.items():
             updated: list[Area] = []
@@ -165,7 +173,7 @@ class InMemoryPlantRepository(PlantDataRepository):
                 return found
         return None
 
-    def delete_area(self, area_id: int) -> bool:
+    def delete_area(self, area_id: int, *, session: object | None = None) -> bool:
         for plant_id, areas in list(self._areas.items()):
             filtered = [area for area in areas if area.id != area_id]
             if len(filtered) != len(areas):
@@ -175,10 +183,12 @@ class InMemoryPlantRepository(PlantDataRepository):
         return False
 
     # Equipment operations
-    def list_equipment(self, area_id: int) -> Sequence[Equipment]:
+    def list_equipment(self, area_id: int, *, session: object | None = None) -> Sequence[Equipment]:
         return list(self._equipment.get(area_id, ()))
 
-    def get_equipment(self, equipment_id: int) -> Equipment | None:
+    def get_equipment(
+        self, equipment_id: int, *, session: object | None = None
+    ) -> Equipment | None:
         for equipment_list in self._equipment.values():
             for equipment in equipment_list:
                 if equipment.id == equipment_id:
@@ -191,6 +201,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> Equipment | None:
         area = self.get_area(area_id)
         if area is None:
@@ -214,6 +226,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> Equipment | None:
         for area_id, equipments in self._equipment.items():
             updated: list[Equipment] = []
@@ -234,7 +248,7 @@ class InMemoryPlantRepository(PlantDataRepository):
                 return found
         return None
 
-    def delete_equipment(self, equipment_id: int) -> bool:
+    def delete_equipment(self, equipment_id: int, *, session: object | None = None) -> bool:
         for area_id, equipments in list(self._equipment.items()):
             filtered = [eq for eq in equipments if eq.id != equipment_id]
             if len(filtered) != len(equipments):
@@ -244,10 +258,10 @@ class InMemoryPlantRepository(PlantDataRepository):
         return False
 
     # System operations
-    def list_systems(self, equipment_id: int) -> Sequence[System]:
+    def list_systems(self, equipment_id: int, *, session: object | None = None) -> Sequence[System]:
         return list(self._systems.get(equipment_id, ()))
 
-    def get_system(self, system_id: int) -> System | None:
+    def get_system(self, system_id: int, *, session: object | None = None) -> System | None:
         for systems in self._systems.values():
             for system in systems:
                 if system.id == system_id:
@@ -260,6 +274,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> System | None:
         equipment = self.get_equipment(equipment_id)
         if equipment is None:
@@ -283,6 +299,8 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
+        *,
+        session: object | None = None,
     ) -> System | None:
         for equipment_id, systems in self._systems.items():
             updated: list[System] = []
@@ -303,7 +321,7 @@ class InMemoryPlantRepository(PlantDataRepository):
                 return found
         return None
 
-    def delete_system(self, system_id: int) -> bool:
+    def delete_system(self, system_id: int, *, session: object | None = None) -> bool:
         for equipment_id, systems in list(self._systems.items()):
             filtered = [sys for sys in systems if sys.id != system_id]
             if len(filtered) != len(systems):

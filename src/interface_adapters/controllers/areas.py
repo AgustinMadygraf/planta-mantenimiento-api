@@ -1,6 +1,6 @@
 """HTTP controller for area endpoints."""
 
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from src.interface_adapters.presenters.area_presenter import present as present_area
 from src.interface_adapters.presenters.equipment_presenter import present_many as present_equipment
 from src.use_cases.ports.plant_repository import PlantDataRepository
+from src.use_cases.ports.unit_of_work import UnitOfWork
 from src.use_cases.create_equipment import CreateEquipmentUseCase
 from src.use_cases.delete_area import DeleteAreaUseCase
 from src.use_cases.get_area import GetAreaUseCase
@@ -30,14 +31,16 @@ def _dump_payload(model: BaseModel) -> dict[str, Any]:
     return model.dict(exclude_unset=True)
 
 
-def build_router(repository: PlantDataRepository) -> APIRouter:
+def build_router(
+    repository: PlantDataRepository, uow_factory: Callable[[], UnitOfWork]
+) -> APIRouter:
     router = APIRouter(prefix="/api/areas", tags=["Áreas"])
 
     get_area_use_case = GetAreaUseCase(repository)
-    update_area_use_case = UpdateAreaUseCase(repository)
-    delete_area_use_case = DeleteAreaUseCase(repository)
+    update_area_use_case = UpdateAreaUseCase(repository, uow_factory)
+    delete_area_use_case = DeleteAreaUseCase(repository, uow_factory)
     list_area_equipment_use_case = ListAreaEquipmentUseCase(repository)
-    create_equipment_use_case = CreateEquipmentUseCase(repository)
+    create_equipment_use_case = CreateEquipmentUseCase(repository, uow_factory)
 
     @router.put("/{area_id}", summary="Actualiza un área")
     async def update_area(area_id: int, payload: AreaUpdatePayload) -> dict[str, int | str]:
