@@ -1,14 +1,15 @@
 """HTTP controller for system endpoints."""
 
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from src.interface_adapters.presenters.system_presenter import present as present_system
+from src.use_cases.ports.plant_repository import PlantDataRepository
+from src.use_cases.ports.unit_of_work import UnitOfWork
 from src.use_cases.delete_system import DeleteSystemUseCase
 from src.use_cases.update_system import UpdateSystemUseCase
-from src.use_cases.ports.plant_repository import PlantRepository
 
 
 class SystemUpdatePayload(BaseModel):
@@ -22,11 +23,13 @@ def _dump_payload(model: BaseModel) -> dict[str, Any]:
     return model.dict(exclude_unset=True)
 
 
-def build_router(repository: PlantRepository) -> APIRouter:
+def build_router(
+    repository: PlantDataRepository, uow_factory: Callable[[], UnitOfWork]
+) -> APIRouter:
     router = APIRouter(prefix="/api/sistemas", tags=["Sistemas"])
 
-    update_system_use_case = UpdateSystemUseCase(repository)
-    delete_system_use_case = DeleteSystemUseCase(repository)
+    update_system_use_case = UpdateSystemUseCase(repository, uow_factory)
+    delete_system_use_case = DeleteSystemUseCase(repository, uow_factory)
 
     @router.put("/{system_id}", summary="Actualiza un sistema")
     async def update_system(system_id: int, payload: SystemUpdatePayload) -> dict[str, int | str]:

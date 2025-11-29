@@ -1,9 +1,12 @@
 from flask import Flask, request
 
+from src.interface_adapters.controllers.flask_routes import build_blueprint
+from src.interface_adapters.gateways.sqlalchemy import (
+    SqlAlchemyPlantRepository,
+    SqlAlchemyUnitOfWork,
+)
 from src.infrastructure.sqlalchemy.config import load_db_config
 from src.infrastructure.sqlalchemy.session import build_session_factory, create_engine_from_config
-from src.infrastructure.sqlalchemy.sqlalchemy_plant_repository import SqlAlchemyPlantRepository
-from src.interface_adapters.controllers.flask_routes import build_blueprint
 from src.shared.config import get_cors_origins
 from src.shared.logger_fastapi import get_logger
 
@@ -28,8 +31,9 @@ def create_app() -> Flask:
     engine = create_engine_from_config(config)
     session_factory = build_session_factory(engine)
     repository = SqlAlchemyPlantRepository(session_factory)
+    uow_factory = lambda: SqlAlchemyUnitOfWork(session_factory)
 
-    flask_app.register_blueprint(build_blueprint(repository))
+    flask_app.register_blueprint(build_blueprint(repository, uow_factory))
 
     @flask_app.after_request
     def add_cors_headers(response):

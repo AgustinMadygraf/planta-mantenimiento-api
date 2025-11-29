@@ -3,13 +3,13 @@
 from typing import Sequence
 
 from src.entities.equipment import Equipment
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import EquipmentRepository
 
 
 class ListAreaEquipmentUseCase:
     """Retrieve equipment associated with an area."""
 
-    def __init__(self, repository: PlantRepository) -> None:
+    def __init__(self, repository: EquipmentRepository) -> None:
         self._repository = repository
 
     def execute(self, area_id: int) -> Sequence[Equipment]:

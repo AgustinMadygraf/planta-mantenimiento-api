@@ -1,6 +1,6 @@
 """HTTP controller for plant endpoints."""
 
-from typing import Any
+from typing import Any, Callable
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -10,7 +10,8 @@ from src.interface_adapters.presenters.area_presenter import (
     present_many as present_areas,
 )
 from src.interface_adapters.presenters.plant_presenter import present, present_many
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import PlantDataRepository
+from src.use_cases.ports.unit_of_work import UnitOfWork
 from src.use_cases.create_area import CreateAreaUseCase
 from src.use_cases.create_plant import CreatePlantUseCase
 from src.use_cases.delete_plant import DeletePlantUseCase
@@ -54,16 +55,18 @@ def _map_localized_fields(payload: dict[str, Any]) -> dict[str, Any]:
     return {key: value for key, value in mapped.items() if value is not None}
 
 
-def build_router(repository: PlantRepository) -> APIRouter:
+def build_router(
+    repository: PlantDataRepository, uow_factory: Callable[[], UnitOfWork]
+) -> APIRouter:
     router = APIRouter(prefix="/api/plantas", tags=["Plantas"])
 
     list_plants_use_case = ListPlantsUseCase(repository)
     get_plant_use_case = GetPlantUseCase(repository)
-    create_plant_use_case = CreatePlantUseCase(repository)
-    update_plant_use_case = UpdatePlantUseCase(repository)
-    delete_plant_use_case = DeletePlantUseCase(repository)
+    create_plant_use_case = CreatePlantUseCase(repository, uow_factory)
+    update_plant_use_case = UpdatePlantUseCase(repository, uow_factory)
+    delete_plant_use_case = DeletePlantUseCase(repository, uow_factory)
     list_plant_areas_use_case = ListPlantAreasUseCase(repository)
-    create_area_use_case = CreateAreaUseCase(repository)
+    create_area_use_case = CreateAreaUseCase(repository, uow_factory)
 
     @router.get("", summary="Lista las plantas registradas")
     async def list_plants() -> list[dict[str, str | int]]:
