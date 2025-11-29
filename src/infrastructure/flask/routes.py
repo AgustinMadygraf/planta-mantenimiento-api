@@ -2,27 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Callable
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify
 from werkzeug.exceptions import BadRequest, NotFound
 
-from src.interface_adapters.presenters.area_presenter import present as present_area
-from src.interface_adapters.presenters.area_presenter import (
-    present_many as present_areas,
-)
-from src.interface_adapters.presenters.equipment_presenter import (
-    present as present_equipment,
-    present_many as present_equipment_list,
-)
-from src.interface_adapters.presenters.plant_presenter import present as present_plant
-from src.interface_adapters.presenters.plant_presenter import (
-    present_many as present_plants,
-)
-from src.interface_adapters.presenters.system_presenter import (
-    present as present_system,
-    present_many as present_systems,
-)
+from src.infrastructure.flask.areas import build_areas_blueprint
+from src.infrastructure.flask.equipment import build_equipment_blueprint
+from src.infrastructure.flask.plants import build_plants_blueprint
+from src.infrastructure.flask.systems import build_systems_blueprint
 from src.use_cases.create_area import CreateAreaUseCase
 from src.use_cases.create_equipment import CreateEquipmentUseCase
 from src.use_cases.create_plant import CreatePlantUseCase
@@ -44,28 +32,6 @@ from src.use_cases.update_area import UpdateAreaUseCase
 from src.use_cases.update_equipment import UpdateEquipmentUseCase
 from src.use_cases.update_plant import UpdatePlantUseCase
 from src.use_cases.update_system import UpdateSystemUseCase
-
-
-def _map_localized_fields(payload: dict[str, Any]) -> dict[str, Any]:
-    mapped = {
-        "name": payload.get("nombre"),
-        "location": payload.get("ubicacion"),
-        "status": payload.get("estado"),
-    }
-    return {key: value for key, value in mapped.items() if value is not None}
-
-
-def _require_json() -> dict[str, Any]:
-    data = request.get_json(silent=True)
-    if data is None:
-        raise BadRequest("Cuerpo JSON inválido o ausente")
-    return data
-
-
-def _require_fields(payload: dict[str, Any], required: list[str]) -> None:
-    missing = [field for field in required if not payload.get(field)]
-    if missing:
-        raise BadRequest(f"Faltan campos obligatorios: {', '.join(missing)}")
 
 
 def build_blueprint(
@@ -105,210 +71,37 @@ def build_blueprint(
     update_system_use_case = UpdateSystemUseCase(repository, uow_factory)
     delete_system_use_case = DeleteSystemUseCase(repository, uow_factory)
 
-    @api_bp.get("/plantas")
-    def list_plants():
-        plants = list_plants_use_case.execute()
-        return jsonify(present_plants(plants))
+    plants_bp = build_plants_blueprint(
+        list_plants_use_case,
+        get_plant_use_case,
+        create_plant_use_case,
+        update_plant_use_case,
+        delete_plant_use_case,
+        list_plant_areas_use_case,
+        create_area_use_case,
+    )
 
-    @api_bp.post("/plantas")
-    def create_plant():
-        payload = _require_json()
-        _require_fields(payload, ["nombre"])
-        data = _map_localized_fields(payload)
-        created = create_plant_use_case.execute(
-            name=data["name"],
-            location=data.get("location"),
-            status=data.get("status"),
-        )
-        return jsonify(present_plant(created)), 201
+    areas_bp = build_areas_blueprint(
+        get_area_use_case,
+        update_area_use_case,
+        delete_area_use_case,
+        list_area_equipment_use_case,
+        create_equipment_use_case,
+    )
 
-    @api_bp.get("/plantas/<int:plant_id>")
-    def get_plant(plant_id: int):
-        plant = get_plant_use_case.execute(plant_id)
-        if plant is None:
-            raise NotFound("Planta no encontrada")
-        return jsonify(present_plant(plant))
+    equipment_bp = build_equipment_blueprint(
+        get_equipment_use_case,
+        update_equipment_use_case,
+        delete_equipment_use_case,
+        list_equipment_systems_use_case,
+        create_system_use_case,
+    )
 
-    @api_bp.put("/plantas/<int:plant_id>")
-    def update_plant(plant_id: int):
-        payload = _require_json()
-        update_data = _map_localized_fields(payload)
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
+    systems_bp = build_systems_blueprint(update_system_use_case, delete_system_use_case)
 
-        updated = update_plant_use_case.execute(plant_id, **update_data)
-        if updated is None:
-            raise NotFound("Planta no encontrada")
-
-        return jsonify(present_plant(updated))
-
-    @api_bp.delete("/plantas/<int:plant_id>")
-    def delete_plant(plant_id: int):
-        deleted = delete_plant_use_case.execute(plant_id)
-        if not deleted:
-            raise NotFound("Planta no encontrada")
-        return ("", 204)
-
-    @api_bp.get("/plantas/<int:plant_id>/areas")
-    def list_plant_areas(plant_id: int):
-        plant = get_plant_use_case.execute(plant_id)
-        if plant is None:
-            raise NotFound("Planta no encontrada")
-
-        areas = list_plant_areas_use_case.execute(plant_id)
-        return jsonify(present_areas(areas))
-
-    @api_bp.post("/plantas/<int:plant_id>/areas")
-    def create_area(plant_id: int):
-        payload = _require_json()
-        _require_fields(payload, ["nombre"])
-
-        plant = get_plant_use_case.execute(plant_id)
-        if plant is None:
-            raise NotFound("Planta no encontrada")
-
-        created = create_area_use_case.execute(
-            plant_id,
-            name=payload["nombre"],
-            status=payload.get("estado"),
-        )
-        if created is None:
-            raise NotFound("No se pudo crear el área")
-
-        return jsonify(present_area(created)), 201
-
-    @api_bp.put("/areas/<int:area_id>")
-    def update_area(area_id: int):
-        payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
-
-        updated = update_area_use_case.execute(area_id, **update_data)
-        if updated is None:
-            raise NotFound("Área no encontrada")
-
-        return jsonify(present_area(updated))
-
-    @api_bp.delete("/areas/<int:area_id>")
-    def delete_area(area_id: int):
-        deleted = delete_area_use_case.execute(area_id)
-        if not deleted:
-            raise NotFound("Área no encontrada")
-        return ("", 204)
-
-    @api_bp.get("/areas/<int:area_id>/equipos")
-    def list_area_equipment(area_id: int):
-        area = get_area_use_case.execute(area_id)
-        if area is None:
-            raise NotFound("Área no encontrada")
-
-        equipment = list_area_equipment_use_case.execute(area_id)
-        return jsonify(present_equipment_list(equipment))
-
-    @api_bp.post("/areas/<int:area_id>/equipos")
-    def create_equipment(area_id: int):
-        payload = _require_json()
-        _require_fields(payload, ["nombre"])
-
-        area = get_area_use_case.execute(area_id)
-        if area is None:
-            raise NotFound("Área no encontrada")
-
-        created = create_equipment_use_case.execute(
-            area_id,
-            name=payload["nombre"],
-            status=payload.get("estado"),
-        )
-        if created is None:
-            raise NotFound("No se pudo crear el equipo")
-
-        return jsonify(present_equipment(created)), 201
-
-    @api_bp.put("/equipos/<int:equipment_id>")
-    def update_equipment(equipment_id: int):
-        payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
-
-        updated = update_equipment_use_case.execute(equipment_id, **update_data)
-        if updated is None:
-            raise NotFound("Equipo no encontrado")
-
-        return jsonify(present_equipment(updated))
-
-    @api_bp.delete("/equipos/<int:equipment_id>")
-    def delete_equipment(equipment_id: int):
-        deleted = delete_equipment_use_case.execute(equipment_id)
-        if not deleted:
-            raise NotFound("Equipo no encontrado")
-        return ("", 204)
-
-    @api_bp.get("/equipos/<int:equipment_id>/sistemas")
-    def list_equipment_systems(equipment_id: int):
-        equipment = get_equipment_use_case.execute(equipment_id)
-        if equipment is None:
-            raise NotFound("Equipo no encontrado")
-
-        systems = list_equipment_systems_use_case.execute(equipment_id)
-        return jsonify(present_systems(systems))
-
-    @api_bp.post("/equipos/<int:equipment_id>/sistemas")
-    def create_system(equipment_id: int):
-        payload = _require_json()
-        _require_fields(payload, ["nombre"])
-
-        equipment = get_equipment_use_case.execute(equipment_id)
-        if equipment is None:
-            raise NotFound("Equipo no encontrado")
-
-        created = create_system_use_case.execute(
-            equipment_id,
-            name=payload["nombre"],
-            status=payload.get("estado"),
-        )
-        if created is None:
-            raise NotFound("No se pudo crear el sistema")
-
-        return jsonify(present_system(created)), 201
-
-    @api_bp.put("/sistemas/<int:system_id>")
-    def update_system(system_id: int):
-        payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
-
-        updated = update_system_use_case.execute(system_id, **update_data)
-        if updated is None:
-            raise NotFound("Sistema no encontrado")
-
-        return jsonify(present_system(updated))
-
-    @api_bp.delete("/sistemas/<int:system_id>")
-    def delete_system(system_id: int):
-        deleted = delete_system_use_case.execute(system_id)
-        if not deleted:
-            raise NotFound("Sistema no encontrado")
-        return ("", 204)
+    api_bp.register_blueprint(plants_bp)
+    api_bp.register_blueprint(areas_bp)
+    api_bp.register_blueprint(equipment_bp)
+    api_bp.register_blueprint(systems_bp)
 
     return api_bp
