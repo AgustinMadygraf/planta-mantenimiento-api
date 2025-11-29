@@ -11,6 +11,7 @@ from src.infrastructure.sqlalchemy import (
 )
 from src.infrastructure.sqlalchemy.config import load_db_config
 from src.infrastructure.sqlalchemy.session import (
+    SessionFactory,
     build_session_factory,
     create_engine_from_config,
 )
@@ -36,7 +37,7 @@ def create_app() -> Flask:
         raise
 
     engine = create_engine_from_config(config)
-    session_factory = build_session_factory(engine)
+    session_factory: SessionFactory = build_session_factory(engine)
     repository = SqlAlchemyPlantRepository(session_factory)
     uow_factory = lambda: SqlAlchemyUnitOfWork(session_factory)
 

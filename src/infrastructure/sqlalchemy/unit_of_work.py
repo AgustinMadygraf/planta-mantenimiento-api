@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from src.use_cases.ports.unit_of_work import UnitOfWork
+from src.infrastructure.sqlalchemy.session import SessionFactory
 
 
 class SqlAlchemyUnitOfWork(UnitOfWork):
     """Manage a SQLAlchemy session lifecycle for a use case."""
 
-    def __init__(self, session_factory: sessionmaker[Session]):
+    def __init__(self, session_factory: SessionFactory):
         self._session_factory = session_factory
         self._session: Session | None = None
         self._completed = False
