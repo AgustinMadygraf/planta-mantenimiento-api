@@ -26,7 +26,10 @@ class Equipment:
         return cls(id=None, area_id=area_id, name=name, status=status)
 
     def rename(self, new_name: str) -> None:
-        self.name = new_name.strip()
+        new_name = new_name.strip()
+        if not new_name:
+            raise ValueError("El nombre del equipo no puede estar vacío")
+        self.name = new_name
 
     def change_status(self, status: str) -> None:
         if status not in self._VALID_STATUSES:
