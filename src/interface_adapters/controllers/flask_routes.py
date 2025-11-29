@@ -1,4 +1,6 @@
-"""Blueprint HTTP controller for Flask endpoints."""
+"""
+Path: src/interface_adapters/controllers/flask_routes.py
+"""
 
 from __future__ import annotations
 
@@ -30,7 +32,6 @@ from src.use_cases.delete_system import DeleteSystemUseCase
 from src.use_cases.get_area import GetAreaUseCase
 from src.use_cases.get_equipment import GetEquipmentUseCase
 from src.use_cases.get_plant import GetPlantUseCase
-from src.use_cases.get_system import GetSystemUseCase
 from src.use_cases.list_area_equipment import ListAreaEquipmentUseCase
 from src.use_cases.list_equipment_systems import ListEquipmentSystemsUseCase
 from src.use_cases.list_plant_areas import ListPlantAreasUseCase
@@ -68,6 +69,7 @@ def _require_fields(payload: dict[str, Any], required: list[str]) -> None:
 def build_blueprint(
     repository: PlantDataRepository, uow_factory: Callable[[], UnitOfWork]
 ) -> Blueprint:
+    "Construye el Blueprint de Flask con las rutas de la API."
     api_bp = Blueprint("api", __name__, url_prefix="/api")
 
     @api_bp.errorhandler(BadRequest)
@@ -98,7 +100,6 @@ def build_blueprint(
     list_equipment_systems_use_case = ListEquipmentSystemsUseCase(repository)
     create_system_use_case = CreateSystemUseCase(repository, uow_factory)
 
-    get_system_use_case = GetSystemUseCase(repository)
     update_system_use_case = UpdateSystemUseCase(repository, uow_factory)
     delete_system_use_case = DeleteSystemUseCase(repository, uow_factory)
 

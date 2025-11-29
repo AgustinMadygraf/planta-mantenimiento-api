@@ -1,19 +1,16 @@
-"""Application entrypoint for local development and ad-hoc execution."""
+"""Punto de entrada para servir la API con Flask."""
 
-import uvicorn
+from src.infrastructure.flask.app import create_app
 
 
 def main() -> None:
-    """Start the FastAPI application with uvicorn."""
-
-    uvicorn.run(
-        "src.infrastructure.fastapi.app:create_app",
-        factory=True,
+    "Inicia la aplicación Flask."
+    app = create_app()
+    app.run(
         host="0.0.0.0",
         port=8000,
-        reload=True,
-        ssl_keyfile="certs/key.pem",      # Ruta a tu clave privada
-        ssl_certfile="certs/cert.pem",    # Ruta a tu certificado
+        debug=True,
+        ssl_context=("certs/cert.pem", "certs/key.pem"),
     )
 
 

@@ -1,3 +1,7 @@
+"""
+Path: src/infrastructure/flask/app.py
+"""
+
 from flask import Flask, request
 
 from src.interface_adapters.controllers.flask_routes import build_blueprint
