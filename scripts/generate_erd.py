@@ -36,7 +36,7 @@ def _load_metadata():
         return metadata
 
     # Offline path: import Declarative Base metadata
-    from src.infrastructure.sqlalchemy.models import Base
+    from src.interface_adapters.gateways.sqlalchemy.models import Base
 
     return Base.metadata
 

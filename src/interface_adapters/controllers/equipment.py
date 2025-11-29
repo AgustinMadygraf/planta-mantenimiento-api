@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from src.interface_adapters.presenters.equipment_presenter import present as present_equipment
 from src.interface_adapters.presenters.system_presenter import present_many as present_systems
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import PlantDataRepository
 from src.use_cases.create_system import CreateSystemUseCase
 from src.use_cases.delete_equipment import DeleteEquipmentUseCase
 from src.use_cases.get_equipment import GetEquipmentUseCase
@@ -30,7 +30,7 @@ def _dump_payload(model: BaseModel) -> dict[str, Any]:
     return model.dict(exclude_unset=True)
 
 
-def build_router(repository: PlantRepository) -> APIRouter:
+def build_router(repository: PlantDataRepository) -> APIRouter:
     router = APIRouter(prefix="/api/equipos", tags=["Equipos"])
 
     get_equipment_use_case = GetEquipmentUseCase(repository)

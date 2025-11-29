@@ -8,10 +8,10 @@ from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.plant import Plant
 from src.entities.system import System
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import PlantDataRepository
 
 
-class InMemoryPlantRepository(PlantRepository):
+class InMemoryPlantRepository(PlantDataRepository):
     """Provide a predictable data set without hitting a real database."""
 
     def __init__(self) -> None:

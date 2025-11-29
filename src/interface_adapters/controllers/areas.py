@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 from src.interface_adapters.presenters.area_presenter import present as present_area
 from src.interface_adapters.presenters.equipment_presenter import present_many as present_equipment
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import PlantDataRepository
 from src.use_cases.create_equipment import CreateEquipmentUseCase
 from src.use_cases.delete_area import DeleteAreaUseCase
 from src.use_cases.get_area import GetAreaUseCase
@@ -30,7 +30,7 @@ def _dump_payload(model: BaseModel) -> dict[str, Any]:
     return model.dict(exclude_unset=True)
 
 
-def build_router(repository: PlantRepository) -> APIRouter:
+def build_router(repository: PlantDataRepository) -> APIRouter:
     router = APIRouter(prefix="/api/areas", tags=["Áreas"])
 
     get_area_use_case = GetAreaUseCase(repository)

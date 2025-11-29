@@ -1,13 +1,13 @@
 """Use case for updating an area."""
 
 from src.entities.area import Area
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import AreaRepository
 
 
 class UpdateAreaUseCase:
     """Apply partial updates to an area."""
 
-    def __init__(self, repository: PlantRepository) -> None:
+    def __init__(self, repository: AreaRepository) -> None:
         self._repository = repository
 
     def execute(self, area_id: int, *, name: str | None = None, status: str | None = None) -> Area | None:
