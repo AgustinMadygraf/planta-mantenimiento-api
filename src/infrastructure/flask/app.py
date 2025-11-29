@@ -39,7 +39,11 @@ def create_app() -> Flask:
     engine = create_engine_from_config(config)
     session_factory: SessionFactory = build_session_factory(engine)
     repository = SqlAlchemyPlantRepository(session_factory)
-    uow_factory = lambda: SqlAlchemyUnitOfWork(session_factory)
+
+    def make_uow() -> SqlAlchemyUnitOfWork:
+        return SqlAlchemyUnitOfWork(session_factory)
+
+    uow_factory = make_uow
 
     flask_app.register_blueprint(build_blueprint(repository, uow_factory))
 
