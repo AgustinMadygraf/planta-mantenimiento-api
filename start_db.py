@@ -5,7 +5,7 @@ import sys
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 
 from src.infrastructure.sqlalchemy.config import load_db_config
-from src.interface_adapters.gateways.sqlalchemy.models import Base
+from src.infrastructure.sqlalchemy.models import Base
 from src.infrastructure.sqlalchemy.session import create_engine_from_config
 from src.shared.logger_fastapi import get_logger
 

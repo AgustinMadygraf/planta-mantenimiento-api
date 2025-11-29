@@ -4,11 +4,8 @@ Path: src/infrastructure/flask/app.py
 
 from flask import Flask, request
 
-from src.interface_adapters.controllers.flask_routes import build_blueprint
-from src.interface_adapters.gateways.sqlalchemy import (
-    SqlAlchemyPlantRepository,
-    SqlAlchemyUnitOfWork,
-)
+from src.infrastructure.flask.routes import build_blueprint
+from src.infrastructure.sqlalchemy import SqlAlchemyPlantRepository, SqlAlchemyUnitOfWork
 from src.infrastructure.sqlalchemy.config import load_db_config
 from src.infrastructure.sqlalchemy.session import build_session_factory, create_engine_from_config
 from src.shared.config import get_cors_origins

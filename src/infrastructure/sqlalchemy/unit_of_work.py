@@ -1,4 +1,4 @@
-"""SQLAlchemy-backed Unit of Work implementation."""
+"""SQLAlchemy-backed Unit of Work implementation en infraestructura."""
 
 from __future__ import annotations
 
