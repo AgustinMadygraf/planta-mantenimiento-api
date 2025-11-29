@@ -1,13 +1,13 @@
 """Use case for creating new systems."""
 
 from src.entities.system import System
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import SystemRepository
 
 
 class CreateSystemUseCase:
     """Create a system associated with equipment."""
 
-    def __init__(self, repository: PlantRepository) -> None:
+    def __init__(self, repository: SystemRepository) -> None:
         self._repository = repository
 
     def execute(self, equipment_id: int, *, name: str, status: str | None = None) -> System | None:

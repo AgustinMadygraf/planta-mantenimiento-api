@@ -1,4 +1,9 @@
-"""Repository contract for plant-related operations."""
+"""Repository contracts segmented by aggregate root.
+
+Separar las operaciones por agregado reduce el acoplamiento entre casos de uso
+y la infraestructura de persistencia, permitiendo que cada caso de uso dependa
+solo de los métodos que necesita.
+"""
 
 from typing import Protocol, Sequence
 
@@ -9,7 +14,7 @@ from src.entities.system import System
 
 
 class PlantRepository(Protocol):
-    """Expose plant data operations needed by the use cases."""
+    """Expose only plant operations needed by the use cases."""
 
     def list_plants(self) -> Sequence[Plant]:
         ...
@@ -39,6 +44,10 @@ class PlantRepository(Protocol):
     def delete_plant(self, plant_id: int) -> bool:
         ...
 
+
+class AreaRepository(Protocol):
+    """Contract for manipulating areas within a plant."""
+
     def list_areas(self, plant_id: int) -> Sequence[Area]:
         ...
 
@@ -65,6 +74,10 @@ class PlantRepository(Protocol):
 
     def delete_area(self, area_id: int) -> bool:
         ...
+
+
+class EquipmentRepository(Protocol):
+    """Contract for working with equipment of an area."""
 
     def list_equipment(self, area_id: int) -> Sequence[Equipment]:
         ...
@@ -93,6 +106,10 @@ class PlantRepository(Protocol):
     def delete_equipment(self, equipment_id: int) -> bool:
         ...
 
+
+class SystemRepository(Protocol):
+    """Contract for managing systems linked to equipment."""
+
     def list_systems(self, equipment_id: int) -> Sequence[System]:
         ...
 
@@ -119,3 +136,20 @@ class PlantRepository(Protocol):
 
     def delete_system(self, system_id: int) -> bool:
         ...
+
+
+class PlantDataRepository(
+    PlantRepository, AreaRepository, EquipmentRepository, SystemRepository, Protocol
+):
+    """Composite protocol used by controllers that need all aggregates."""
+
+    pass
+
+
+__all__ = [
+    "PlantRepository",
+    "AreaRepository",
+    "EquipmentRepository",
+    "SystemRepository",
+    "PlantDataRepository",
+]

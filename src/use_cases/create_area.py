@@ -1,13 +1,13 @@
 """Use case for creating a new area within a plant."""
 
 from src.entities.area import Area
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import AreaRepository
 
 
 class CreateAreaUseCase:
     """Create an area associated with a plant."""
 
-    def __init__(self, repository: PlantRepository) -> None:
+    def __init__(self, repository: AreaRepository) -> None:
         self._repository = repository
 
     def execute(self, plant_id: int, *, name: str, status: str | None = None) -> Area | None:

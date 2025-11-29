@@ -35,7 +35,7 @@ from src.use_cases.list_area_equipment import ListAreaEquipmentUseCase
 from src.use_cases.list_equipment_systems import ListEquipmentSystemsUseCase
 from src.use_cases.list_plant_areas import ListPlantAreasUseCase
 from src.use_cases.list_plants import ListPlantsUseCase
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import PlantDataRepository
 from src.use_cases.update_area import UpdateAreaUseCase
 from src.use_cases.update_equipment import UpdateEquipmentUseCase
 from src.use_cases.update_plant import UpdatePlantUseCase
@@ -64,7 +64,7 @@ def _require_fields(payload: dict[str, Any], required: list[str]) -> None:
         raise BadRequest(f"Faltan campos obligatorios: {', '.join(missing)}")
 
 
-def build_blueprint(repository: PlantRepository) -> Blueprint:
+def build_blueprint(repository: PlantDataRepository) -> Blueprint:
     api_bp = Blueprint("api", __name__, url_prefix="/api")
 
     @api_bp.errorhandler(BadRequest)

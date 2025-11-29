@@ -1,13 +1,13 @@
 """Use case for retrieving a single equipment."""
 
 from src.entities.equipment import Equipment
-from src.use_cases.ports.plant_repository import PlantRepository
+from src.use_cases.ports.plant_repository import EquipmentRepository
 
 
 class GetEquipmentUseCase:
     """Fetch equipment by identifier."""
 
-    def __init__(self, repository: PlantRepository) -> None:
+    def __init__(self, repository: EquipmentRepository) -> None:
         self._repository = repository
 
     def execute(self, equipment_id: int) -> Equipment | None:
