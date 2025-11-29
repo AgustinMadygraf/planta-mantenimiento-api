@@ -6,13 +6,14 @@ from collections.abc import Sequence
 from contextlib import contextmanager
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.plant import Plant
 from src.entities.system import System
 from src.infrastructure.sqlalchemy import mappers
+from src.infrastructure.sqlalchemy.session import SessionFactory
 from src.infrastructure.sqlalchemy.models import (
     AreaModel,
     EquipmentModel,
@@ -25,7 +26,7 @@ from src.use_cases.ports.plant_repository import PlantDataRepository
 class SqlAlchemyPlantRepository(PlantDataRepository):
     """Repositorio concreto respaldado por SQLAlchemy y MySQL."""
 
-    def __init__(self, session_factory: sessionmaker[Session]) -> None:
+    def __init__(self, session_factory: SessionFactory) -> None:
         self._session_factory = session_factory
 
     @contextmanager

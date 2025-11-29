@@ -1,10 +1,15 @@
 """Helpers to build SQLAlchemy engines and sessions."""
 
+from collections.abc import Callable
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.infrastructure.sqlalchemy.config import DBConfig
+
+
+SessionFactory = Callable[[], Session]
 
 
 def create_engine_from_config(config: DBConfig) -> Engine:
@@ -21,7 +26,7 @@ def create_engine_from_config(config: DBConfig) -> Engine:
     )
 
 
-def build_session_factory(engine: Engine) -> sessionmaker[Session]:
+def build_session_factory(engine: Engine) -> SessionFactory:
     """Return a session factory to produce short-lived sessions per request."""
 
     return sessionmaker(
