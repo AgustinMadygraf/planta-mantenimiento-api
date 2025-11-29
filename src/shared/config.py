@@ -7,14 +7,20 @@ sobrescribir valores desde el entorno del sistema.
 
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+logger = logging.getLogger(__name__)
+
 try:
     from dotenv import load_dotenv
-except Exception:  # pragma: no cover - dependencia opcional
+except ImportError:  # pragma: no cover - dependencia opcional
     load_dotenv = None
+except Exception as exc:  # pragma: no cover - visibiliza fallos inesperados de importación
+    logger.exception("Error inesperado importando python-dotenv")
+    raise
 
 
 def load_env(env_path: str = ".env") -> bool:
@@ -34,8 +40,11 @@ def load_env(env_path: str = ".env") -> bool:
     if load_dotenv is not None:
         try:
             return load_dotenv(path, override=False)
-        except Exception as exc:  # pragma: no cover - errores raros de I/O/encoding
+        except (OSError, UnicodeError) as exc:
             raise RuntimeError(f"No se pudo cargar {env_path}: {exc}") from exc
+        except Exception as exc:  # pragma: no cover - visibiliza fallos inesperados
+            logger.exception("Carga fallida de %s con python-dotenv", env_path)
+            raise
 
     # Fallback manual sin dependencias externas
     try:
