@@ -18,7 +18,9 @@ try:
     from dotenv import load_dotenv
 except ImportError:  # pragma: no cover - dependencia opcional
     load_dotenv = None
-except Exception as exc:  # pragma: no cover - visibiliza fallos inesperados de importación
+except (
+    Exception
+) as exc:  # pragma: no cover - visibiliza fallos inesperados de importación
     logger.exception("Error inesperado importando python-dotenv")
     raise
 
