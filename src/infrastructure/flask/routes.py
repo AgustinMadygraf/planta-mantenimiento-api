@@ -8,13 +8,17 @@ from flask import Blueprint, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
 
 from src.interface_adapters.presenters.area_presenter import present as present_area
-from src.interface_adapters.presenters.area_presenter import present_many as present_areas
+from src.interface_adapters.presenters.area_presenter import (
+    present_many as present_areas,
+)
 from src.interface_adapters.presenters.equipment_presenter import (
     present as present_equipment,
     present_many as present_equipment_list,
 )
 from src.interface_adapters.presenters.plant_presenter import present as present_plant
-from src.interface_adapters.presenters.plant_presenter import present_many as present_plants
+from src.interface_adapters.presenters.plant_presenter import (
+    present_many as present_plants,
+)
 from src.interface_adapters.presenters.system_presenter import (
     present as present_system,
     present_many as present_systems,
@@ -180,7 +184,9 @@ def build_blueprint(
             "name": payload.get("nombre"),
             "status": payload.get("estado"),
         }
-        update_data = {key: value for key, value in update_data.items() if value is not None}
+        update_data = {
+            key: value for key, value in update_data.items() if value is not None
+        }
         if not update_data:
             raise BadRequest("No se enviaron campos para actualizar")
 
@@ -232,7 +238,9 @@ def build_blueprint(
             "name": payload.get("nombre"),
             "status": payload.get("estado"),
         }
-        update_data = {key: value for key, value in update_data.items() if value is not None}
+        update_data = {
+            key: value for key, value in update_data.items() if value is not None
+        }
         if not update_data:
             raise BadRequest("No se enviaron campos para actualizar")
 
@@ -284,7 +292,9 @@ def build_blueprint(
             "name": payload.get("nombre"),
             "status": payload.get("estado"),
         }
-        update_data = {key: value for key, value in update_data.items() if value is not None}
+        update_data = {
+            key: value for key, value in update_data.items() if value is not None
+        }
         if not update_data:
             raise BadRequest("No se enviaron campos para actualizar")
 

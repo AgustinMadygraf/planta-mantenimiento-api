@@ -26,7 +26,9 @@ class PlantModel(Base):
 
 class AreaModel(Base):
     __tablename__ = "areas"
-    __table_args__ = (UniqueConstraint("plant_id", "name", name="uq_area_name_per_plant"),)
+    __table_args__ = (
+        UniqueConstraint("plant_id", "name", name="uq_area_name_per_plant"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     plant_id: Mapped[int] = mapped_column(

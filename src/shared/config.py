@@ -83,7 +83,9 @@ def get_mysql_config() -> Dict[str, Any]:
         "port": _int_or_default(get_env("DB_PORT") or get_env("MYSQL_PORT"), 3306),
         "user": get_env("DB_USER") or get_env("MYSQL_USER", "root"),
         "password": get_env("DB_PASSWORD") or get_env("MYSQL_PASSWORD", ""),
-        "database": get_env("DB_NAME") or get_env("MYSQL_DB") or get_env("MYSQL_DATABASE", "planta_mantenimiento"),
+        "database": get_env("DB_NAME")
+        or get_env("MYSQL_DB")
+        or get_env("MYSQL_DATABASE", "planta_mantenimiento"),
         "pool_size": _int_or_default(get_env("DB_POOL_SIZE"), 5),
         "max_overflow": _int_or_default(get_env("DB_MAX_OVERFLOW"), 10),
         "pool_timeout": _int_or_default(get_env("DB_POOL_TIMEOUT"), 30),

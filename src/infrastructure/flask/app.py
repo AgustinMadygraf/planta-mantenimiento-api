@@ -5,9 +5,15 @@ Path: src/infrastructure/flask/app.py
 from flask import Flask, request
 
 from src.infrastructure.flask.routes import build_blueprint
-from src.infrastructure.sqlalchemy import SqlAlchemyPlantRepository, SqlAlchemyUnitOfWork
+from src.infrastructure.sqlalchemy import (
+    SqlAlchemyPlantRepository,
+    SqlAlchemyUnitOfWork,
+)
 from src.infrastructure.sqlalchemy.config import load_db_config
-from src.infrastructure.sqlalchemy.session import build_session_factory, create_engine_from_config
+from src.infrastructure.sqlalchemy.session import (
+    build_session_factory,
+    create_engine_from_config,
+)
 from src.shared.config import get_cors_origins
 from src.shared.logger_fastapi import get_logger
 
@@ -48,7 +54,9 @@ def create_app() -> Flask:
             response.headers["Vary"] = "Origin"
 
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+        response.headers["Access-Control-Allow-Methods"] = (
+            "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+        )
         response.headers["Access-Control-Allow-Credentials"] = "true"
 
         if request.method == "OPTIONS":
@@ -56,7 +64,7 @@ def create_app() -> Flask:
 
         return response
 
-    @flask_app.route("/api/health", methods=["GET"])  # simple health check
+    @flask_app.route("/api/health", methods=["GET"])
     def health_check() -> tuple[dict[str, str], int]:
         return {"status": "ok"}, 200
 

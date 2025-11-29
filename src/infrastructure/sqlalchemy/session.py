@@ -24,4 +24,6 @@ def create_engine_from_config(config: DBConfig) -> Engine:
 def build_session_factory(engine: Engine) -> sessionmaker[Session]:
     """Return a session factory to produce short-lived sessions per request."""
 
-    return sessionmaker(bind=engine, autoflush=False, expire_on_commit=False, future=True)
+    return sessionmaker(
+        bind=engine, autoflush=False, expire_on_commit=False, future=True
+    )

@@ -4,7 +4,12 @@ from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.plant import Plant
 from src.entities.system import System
-from src.infrastructure.sqlalchemy.models import AreaModel, EquipmentModel, PlantModel, SystemModel
+from src.infrastructure.sqlalchemy.models import (
+    AreaModel,
+    EquipmentModel,
+    PlantModel,
+    SystemModel,
+)
 
 
 def plant_to_entity(model: PlantModel) -> Plant:

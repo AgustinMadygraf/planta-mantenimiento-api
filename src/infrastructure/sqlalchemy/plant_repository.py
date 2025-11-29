@@ -68,7 +68,9 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         session: Session | None = None,
     ) -> Plant:
         with self._transactional_scope(session) as db:
-            plant = PlantModel(name=name, location=location, status=status or "operativa")
+            plant = PlantModel(
+                name=name, location=location, status=status or "operativa"
+            )
             db.add(plant)
             db.flush()
             return mappers.plant_to_entity(plant)
@@ -111,7 +113,9 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         self, plant_id: int, *, session: Session | None = None
     ) -> Sequence[Area]:
         with self._session_scope(session) as db:
-            rows = db.execute(select(AreaModel).where(AreaModel.plant_id == plant_id)).scalars()
+            rows = db.execute(
+                select(AreaModel).where(AreaModel.plant_id == plant_id)
+            ).scalars()
             return [mappers.area_to_entity(row) for row in rows]
 
     def get_area(self, area_id: int, *, session: Session | None = None) -> Area | None:

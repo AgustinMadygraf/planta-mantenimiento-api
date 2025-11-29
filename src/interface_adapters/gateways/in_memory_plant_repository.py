@@ -16,35 +16,69 @@ class InMemoryPlantRepository(PlantDataRepository):
 
     def __init__(self) -> None:
         self._plants: dict[int, Plant] = {
-            1: Plant(id=1, name="Planta Norte", location="Zona Industrial A", status="operativa"),
-            2: Plant(id=2, name="Planta Sur", location="Zona Industrial B", status="mantenimiento"),
-            3: Plant(id=3, name="Planta Este", location="Zona Industrial C", status="operativa"),
+            1: Plant(
+                id=1,
+                name="Planta Norte",
+                location="Zona Industrial A",
+                status="operativa",
+            ),
+            2: Plant(
+                id=2,
+                name="Planta Sur",
+                location="Zona Industrial B",
+                status="mantenimiento",
+            ),
+            3: Plant(
+                id=3,
+                name="Planta Este",
+                location="Zona Industrial C",
+                status="operativa",
+            ),
         }
         self._areas: dict[int, tuple[Area, ...]] = {
             1: (
                 Area(id=101, plant_id=1, name="Área de Producción", status="operativa"),
-                Area(id=102, plant_id=1, name="Área de Almacenamiento", status="mantenimiento"),
+                Area(
+                    id=102,
+                    plant_id=1,
+                    name="Área de Almacenamiento",
+                    status="mantenimiento",
+                ),
             ),
             2: (
                 Area(id=201, plant_id=2, name="Área de Seguridad", status="operativa"),
             ),
             3: (
-                Area(id=301, plant_id=3, name="Área de Laboratorio", status="operativa"),
+                Area(
+                    id=301, plant_id=3, name="Área de Laboratorio", status="operativa"
+                ),
                 Area(id=302, plant_id=3, name="Área de Logística", status="operativa"),
             ),
         }
         self._equipment: dict[int, tuple[Equipment, ...]] = {
             101: (
                 Equipment(id=1001, area_id=101, name="Compresor A", status="operativo"),
-                Equipment(id=1002, area_id=101, name="Banda Transportadora", status="mantenimiento"),
+                Equipment(
+                    id=1002,
+                    area_id=101,
+                    name="Banda Transportadora",
+                    status="mantenimiento",
+                ),
             ),
             201: (
-                Equipment(id=2001, area_id=201, name="Tablero de Control", status="operativo"),
+                Equipment(
+                    id=2001, area_id=201, name="Tablero de Control", status="operativo"
+                ),
             ),
         }
         self._systems: dict[int, tuple[System, ...]] = {
             1001: (
-                System(id=5001, equipment_id=1001, name="Sistema de Enfriamiento", status="operativo"),
+                System(
+                    id=5001,
+                    equipment_id=1001,
+                    name="Sistema de Enfriamiento",
+                    status="operativo",
+                ),
             ),
         }
 
@@ -52,7 +86,9 @@ class InMemoryPlantRepository(PlantDataRepository):
     def list_plants(self, *, session: object | None = None) -> Sequence[Plant]:
         return list(self._plants.values())
 
-    def get_plant(self, plant_id: int, *, session: object | None = None) -> Plant | None:
+    def get_plant(
+        self, plant_id: int, *, session: object | None = None
+    ) -> Plant | None:
         return self._plants.get(plant_id)
 
     def create_plant(
@@ -61,7 +97,6 @@ class InMemoryPlantRepository(PlantDataRepository):
         name: str,
         location: str | None = None,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> Plant:
         new_id = max(self._plants.keys(), default=0) + 1
@@ -81,7 +116,6 @@ class InMemoryPlantRepository(PlantDataRepository):
         name: str | None = None,
         location: str | None = None,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> Plant | None:
         current = self._plants.get(plant_id)
@@ -110,7 +144,9 @@ class InMemoryPlantRepository(PlantDataRepository):
         return True
 
     # Area operations
-    def list_areas(self, plant_id: int, *, session: object | None = None) -> Sequence[Area]:
+    def list_areas(
+        self, plant_id: int, *, session: object | None = None
+    ) -> Sequence[Area]:
         return list(self._areas.get(plant_id, ()))
 
     def get_area(self, area_id: int, *, session: object | None = None) -> Area | None:
@@ -126,14 +162,18 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> Area | None:
         plant = self._plants.get(plant_id)
         if plant is None:
             return None
 
-        new_id = max((area.id for areas in self._areas.values() for area in areas), default=0) + 1
+        new_id = (
+            max(
+                (area.id for areas in self._areas.values() for area in areas), default=0
+            )
+            + 1
+        )
         area = Area(
             id=new_id,
             plant_id=plant.id,
@@ -151,7 +191,6 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> Area | None:
         for plant_id, areas in self._areas.items():
@@ -183,7 +222,9 @@ class InMemoryPlantRepository(PlantDataRepository):
         return False
 
     # Equipment operations
-    def list_equipment(self, area_id: int, *, session: object | None = None) -> Sequence[Equipment]:
+    def list_equipment(
+        self, area_id: int, *, session: object | None = None
+    ) -> Sequence[Equipment]:
         return list(self._equipment.get(area_id, ()))
 
     def get_equipment(
@@ -201,14 +242,18 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> Equipment | None:
         area = self.get_area(area_id)
         if area is None:
             return None
 
-        new_id = max((eq.id for items in self._equipment.values() for eq in items), default=0) + 1
+        new_id = (
+            max(
+                (eq.id for items in self._equipment.values() for eq in items), default=0
+            )
+            + 1
+        )
         equipment = Equipment(
             id=new_id,
             area_id=area.id,
@@ -226,7 +271,6 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> Equipment | None:
         for area_id, equipments in self._equipment.items():
@@ -248,7 +292,9 @@ class InMemoryPlantRepository(PlantDataRepository):
                 return found
         return None
 
-    def delete_equipment(self, equipment_id: int, *, session: object | None = None) -> bool:
+    def delete_equipment(
+        self, equipment_id: int, *, session: object | None = None
+    ) -> bool:
         for area_id, equipments in list(self._equipment.items()):
             filtered = [eq for eq in equipments if eq.id != equipment_id]
             if len(filtered) != len(equipments):
@@ -258,10 +304,14 @@ class InMemoryPlantRepository(PlantDataRepository):
         return False
 
     # System operations
-    def list_systems(self, equipment_id: int, *, session: object | None = None) -> Sequence[System]:
+    def list_systems(
+        self, equipment_id: int, *, session: object | None = None
+    ) -> Sequence[System]:
         return list(self._systems.get(equipment_id, ()))
 
-    def get_system(self, system_id: int, *, session: object | None = None) -> System | None:
+    def get_system(
+        self, system_id: int, *, session: object | None = None
+    ) -> System | None:
         for systems in self._systems.values():
             for system in systems:
                 if system.id == system_id:
@@ -274,14 +324,19 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> System | None:
         equipment = self.get_equipment(equipment_id)
         if equipment is None:
             return None
 
-        new_id = max((sys.id for systems in self._systems.values() for sys in systems), default=0) + 1
+        new_id = (
+            max(
+                (sys.id for systems in self._systems.values() for sys in systems),
+                default=0,
+            )
+            + 1
+        )
         system = System(
             id=new_id,
             equipment_id=equipment.id,
@@ -299,7 +354,6 @@ class InMemoryPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: object | None = None,
     ) -> System | None:
         for equipment_id, systems in self._systems.items():

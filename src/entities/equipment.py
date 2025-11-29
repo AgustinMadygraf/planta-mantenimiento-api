@@ -22,9 +22,7 @@ class Equipment:
             raise ValueError(f"Estado de equipo inválido: {self.status}")
 
     @classmethod
-    def create(
-        cls, area_id: int, name: str, status: str = "operativo"
-    ) -> "Equipment":
+    def create(cls, area_id: int, name: str, status: str = "operativo") -> "Equipment":
         return cls(id=None, area_id=area_id, name=name, status=status)
 
     def rename(self, new_name: str) -> None:
