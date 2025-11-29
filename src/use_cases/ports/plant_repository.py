@@ -28,7 +28,6 @@ class PlantRepository(Protocol):
         name: str,
         location: str | None = None,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> Plant:
         ...
@@ -40,7 +39,6 @@ class PlantRepository(Protocol):
         name: str | None = None,
         location: str | None = None,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> Plant | None:
         ...
@@ -64,7 +62,6 @@ class AreaRepository(Protocol):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> Area | None:
         ...
@@ -75,7 +72,6 @@ class AreaRepository(Protocol):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> Area | None:
         ...
@@ -99,7 +95,6 @@ class EquipmentRepository(Protocol):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> Equipment | None:
         ...
@@ -110,7 +105,6 @@ class EquipmentRepository(Protocol):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> Equipment | None:
         ...
@@ -134,7 +128,6 @@ class SystemRepository(Protocol):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> System | None:
         ...
@@ -145,7 +138,6 @@ class SystemRepository(Protocol):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: Any | None = None,
     ) -> System | None:
         ...

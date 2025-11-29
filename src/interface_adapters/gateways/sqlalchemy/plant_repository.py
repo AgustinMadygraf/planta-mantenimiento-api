@@ -127,7 +127,6 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: Session | None = None,
     ) -> Area | None:
         with self._transactional_scope(session) as db:
@@ -146,7 +145,6 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: Session | None = None,
     ) -> Area | None:
         with self._transactional_scope(session) as db:
@@ -196,7 +194,6 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: Session | None = None,
     ) -> Equipment | None:
         with self._transactional_scope(session) as db:
@@ -217,7 +214,6 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: Session | None = None,
     ) -> Equipment | None:
         with self._transactional_scope(session) as db:
@@ -269,7 +265,6 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str,
         status: str | None = None,
-        *,
         session: Session | None = None,
     ) -> System | None:
         with self._transactional_scope(session) as db:
@@ -290,7 +285,6 @@ class SqlAlchemyPlantRepository(PlantDataRepository):
         *,
         name: str | None = None,
         status: str | None = None,
-        *,
         session: Session | None = None,
     ) -> System | None:
         with self._transactional_scope(session) as db:
