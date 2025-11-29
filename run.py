@@ -12,6 +12,8 @@ def main() -> None:
         host="0.0.0.0",
         port=8000,
         reload=True,
+        ssl_keyfile="certs/key.pem",      # Ruta a tu clave privada
+        ssl_certfile="certs/cert.pem",    # Ruta a tu certificado
     )
 
 

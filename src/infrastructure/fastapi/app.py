@@ -24,7 +24,7 @@ def create_app() -> FastAPI:
 
     fastapi_app.add_middleware(
         CORSMiddleware,
-        allow_origins=cors_origins,
+        allow_origins=["https://mantenimiento.profebustos.com.ar"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
