@@ -2,7 +2,7 @@
 Path: src/infrastructure/flask/app.py
 """
 
-from flask import Flask, request
+from flask import Flask, request, redirect  # agrega redirect
 
 from src.infrastructure.flask.routes import build_blueprint
 from src.infrastructure.sqlalchemy import (
@@ -15,7 +15,7 @@ from src.infrastructure.sqlalchemy.session import (
     build_session_factory,
     create_engine_from_config,
 )
-from src.shared.config import get_cors_origins
+from src.shared.config import get_cors_origins, get_env
 from src.shared.logger_fastapi import get_logger
 
 logger = get_logger("flask-app")
@@ -72,6 +72,11 @@ def create_app() -> Flask:
     @flask_app.route("/api/health", methods=["GET"])
     def health_check() -> tuple[dict[str, str], int]:
         return {"status": "ok"}, 200
+
+    @flask_app.route("/", methods=["GET"])
+    def forward_to_web():
+        web_url = get_env("WEB_URL")
+        return redirect(web_url, code=302)
 
     return flask_app
 
