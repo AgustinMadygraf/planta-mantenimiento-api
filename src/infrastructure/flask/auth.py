@@ -284,7 +284,9 @@ class ScopeAuthorizer:
 
         if claims.role == "maquinista":
             allowed_equipment = {
-                eq.id: eq for eq in self._equipment_from_ids(claims.equipos)
+                eq.id: eq
+                for eq in self._equipment_from_ids(claims.equipos)
+                if eq is not None
             }
             return [
                 area
