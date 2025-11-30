@@ -4,11 +4,13 @@ from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.plant import Plant
 from src.entities.system import System
+from src.entities.user import User
 from src.infrastructure.sqlalchemy.models import (
     AreaModel,
     EquipmentModel,
     PlantModel,
     SystemModel,
+    UserModel,
 )
 
 
@@ -45,4 +47,14 @@ def system_to_entity(model: SystemModel) -> System:
         equipment_id=model.equipment_id,
         name=model.name,
         status=model.status,
+    )
+
+
+def user_to_entity(model: UserModel) -> User:
+    return User(
+        username=model.username,
+        password_hash=model.password_hash,
+        role=model.role,
+        areas=list(model.areas or []),
+        equipos=list(model.equipos or []),
     )
