@@ -106,7 +106,7 @@ def build_plants_blueprint(
             raise NotFound("Planta no encontrada")
 
         areas = list_plant_areas_use_case.execute(plant_id)
-        scoped = scope_authorizer.filter_areas(claims, plant_id, areas)
+        scoped = scope_authorizer.filter_areas(claims, areas)
         return jsonify(present_areas(scoped))
 
     @plants_bp.post("/<int:plant_id>/areas")

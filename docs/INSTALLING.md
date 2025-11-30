@@ -30,7 +30,14 @@ pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv
    - Opcional: `DB_URL` si prefieres definir la URL completa (p.ej. `mysql+pymysql://user:pass@host:3306/db`).
 3. Ajusta otros valores relevantes:
    - `CORS_ORIGINS` para permitir tu front-end (lista separada por comas, por defecto `http://localhost:5173`).
-   - `AUTH_SECRET_KEY` (obligatorio en entornos reales) para firmar tokens JWT; reemplaza el valor de ejemplo.
+   - **Genera una clave segura para `AUTH_SECRET_KEY`** ejecutando en la terminal:
+     ```bash
+     python -c "import secrets; print(secrets.token_urlsafe(32))"
+     ```
+     Copia el valor generado y asígnalo en `.env`:
+     ```
+     AUTH_SECRET_KEY=<valor_generado>
+     ```
    - `AUTH_SUPERADMIN_USERNAME` y `AUTH_SUPERADMIN_PASSWORD` para habilitar un usuario de respaldo independiente de MySQL.
 
 Si `.env` no existe, la aplicación usará valores por defecto (adecuados solo para desarrollo). Si algún `DB_*` no es un número válido,

@@ -1,6 +1,9 @@
-"""Configuración de conexión a base de datos MySQL."""
+"""
+Path: src/infrastructure/sqlalchemy/config.py
+"""
 
 from dataclasses import dataclass
+from urllib.parse import quote_plus
 
 from src.shared.config import get_mysql_config, load_env
 
@@ -22,11 +25,7 @@ class DBConfig:
 
     @property
     def url(self) -> str:
-        """URL de conexión en formato mysql+pymysql."""
-
-        # Lazy import para evitar dependencia si no se usa MySQL
-        from urllib.parse import quote_plus
-
+        "URL de conexión en formato mysql+pymysql."
         encoded_password = quote_plus(self.password)
         return (
             f"mysql+pymysql://{self.user}:{encoded_password}@{self.host}:{self.port}/"
