@@ -1,4 +1,6 @@
-"""Repositorios y protocolos para usuarios autenticables."""
+"""
+Path: src/infrastructure/user_repository.py
+"""
 
 from __future__ import annotations
 
@@ -44,8 +46,11 @@ DEFAULT_DEMO_USERS = (
 class UserRepository(Protocol):
     """Contrato mínimo para almacenar y recuperar usuarios."""
 
-    def get_by_username(self, username: str, *, session: object | None = None) -> User | None:
-        ...
+    def get_by_username(
+        self, username: str, *, session: object | None = None
+    ) -> User | None:
+        "Recupera un usuario por su nombre de usuario."
+        pass  # pylint: disable=unnecessary-pass
 
     def create_user(
         self,
@@ -57,10 +62,12 @@ class UserRepository(Protocol):
         equipos: Sequence[int],
         session: object | None = None,
     ) -> User:
-        ...
+        "Crea un nuevo usuario."
+        pass  # pylint: disable=unnecessary-pass
 
     def list_users(self, *, session: object | None = None) -> Sequence[User]:
-        ...
+        "Lista todos los usuarios."
+        pass  # pylint: disable=unnecessary-pass
 
 
 class InMemoryUserRepository(UserRepository):
@@ -71,6 +78,7 @@ class InMemoryUserRepository(UserRepository):
 
     @classmethod
     def with_defaults(cls) -> "InMemoryUserRepository":
+        "Crea un repositorio con usuarios de demostración."
         repo = cls()
         for user in DEFAULT_DEMO_USERS:
             repo.create_user(
@@ -82,7 +90,9 @@ class InMemoryUserRepository(UserRepository):
             )
         return repo
 
-    def get_by_username(self, username: str, *, session: object | None = None) -> User | None:
+    def get_by_username(
+        self, username: str, *, session: object | None = None
+    ) -> User | None:
         return self._users.get(username)
 
     def create_user(
@@ -109,6 +119,7 @@ class InMemoryUserRepository(UserRepository):
         return list(self._users.values())
 
     def verify_credentials(self, username: str, password: str) -> User | None:
+        "Verifica las credenciales y devuelve el usuario si son correctas."
         user = self.get_by_username(username)
         if user and check_password_hash(user.password_hash, password):
             return user

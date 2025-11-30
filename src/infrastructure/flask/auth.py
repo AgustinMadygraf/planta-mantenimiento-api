@@ -1,4 +1,6 @@
-"""Utilidades de autenticación y autorización para Flask."""
+"""
+Path: src/infrastructure/flask/auth.py
+"""
 
 from __future__ import annotations
 
@@ -15,7 +17,11 @@ from src.entities.equipment import Equipment
 from src.entities.system import System
 from src.shared.config import get_env, get_superadmin_credentials
 from src.shared.logger import get_logger
-from src.infrastructure.user_repository import InMemoryUserRepository, UserRepository
+from src.infrastructure.user_repository import (
+    InMemoryUserRepository,
+    UserRepository,
+    User,
+)
 
 
 logger = get_logger(__name__)
@@ -48,6 +54,8 @@ def mask_authorization_header(auth_header: str) -> str:
 
 @dataclass(slots=True)
 class AuthClaims:
+    "Claims de autorización extraídos de un token."
+
     username: str
     role: str
     areas: list[int]
@@ -56,11 +64,13 @@ class AuthClaims:
 
 @dataclass(slots=True)
 class AuthUser(AuthClaims):
+    "Usuario autenticable con credenciales."
+
     password: str
 
 
 def _default_users() -> dict[str, AuthUser]:
-    """Usuarios de demostración acordes a los roles del frontend."""
+    "Usuarios de demostración acordes a los roles del frontend."
 
     superadmin_username, superadmin_password = get_superadmin_credentials()
 
@@ -110,13 +120,19 @@ class AuthService:
         self._token_ttl = token_ttl_seconds or int(
             get_env("AUTH_TOKEN_TTL_SECONDS", "3600")
         )
-        self._user_repository = user_repository or InMemoryUserRepository.with_defaults()
+        self._user_repository = (
+            user_repository or InMemoryUserRepository.with_defaults()
+        )
         self._serializer = URLSafeTimedSerializer(self._secret_key, salt="auth")
 
     def issue_token(self, username: str, password: str) -> str:
+        "Emite un token JWT si las credenciales son válidas."
         user = self._user_repository.get_by_username(username)
         if user is None or not check_password_hash(user.password_hash, password):
-            logger.warning("Intento de login con credenciales inválidas", extra={"username": username})
+            logger.warning(
+                "Intento de login con credenciales inválidas",
+                extra={"username": username},
+            )
             raise Unauthorized("Credenciales inválidas")
 
         logger.info("Login exitoso", extra={"username": username})
@@ -132,9 +148,12 @@ class AuthService:
         }
 
     def decode_token(self, token: str) -> AuthClaims:
+        "Decodifica y valida un token, devolviendo sus claims."
         try:
             data = self._serializer.loads(token, max_age=self._token_ttl)
-        except SignatureExpired as exc:  # pragma: no cover - paths cubiertos por BadSignature
+        except (
+            SignatureExpired
+        ) as exc:  # pragma: no cover - paths cubiertos por BadSignature
             logger.warning("Token expirado")
             raise Unauthorized("Token expirado") from exc
         except BadSignature as exc:
@@ -146,7 +165,10 @@ class AuthService:
             logger.error("Token con rol no permitido", extra={"role": role})
             raise Unauthorized("Rol inválido en el token")
 
-        logger.debug("Token decodificado correctamente", extra={"username": data.get("username", ""), "role": role})
+        logger.debug(
+            "Token decodificado correctamente",
+            extra={"username": data.get("username", ""), "role": role},
+        )
         return AuthClaims(
             username=data.get("username", ""),
             role=role,
@@ -155,6 +177,7 @@ class AuthService:
         )
 
     def require_claims(self, request: Request) -> AuthClaims:
+        "Extrae y valida los claims de autorización del header Authorization."
         auth_header = request.headers.get("Authorization", "").strip()
         if not auth_header:
             logger.warning(
@@ -171,7 +194,10 @@ class AuthService:
         if scheme.lower() != "bearer":
             logger.warning(
                 "Esquema de autorización inválido",
-                extra={"scheme": scheme, "auth_header": mask_authorization_header(auth_header)},
+                extra={
+                    "scheme": scheme,
+                    "auth_header": mask_authorization_header(auth_header),
+                },
             )
             raise Unauthorized("Falta token de autenticación")
 
@@ -191,7 +217,7 @@ class AuthService:
 
 
 class ScopeAuthorizer:
-    """Valida permisos por rol y alcance sobre entidades jerárquicas."""
+    "Valida permisos por rol y alcance sobre entidades jerárquicas."
 
     def __init__(
         self,
@@ -205,10 +231,12 @@ class ScopeAuthorizer:
         self._get_system = get_system
 
     def ensure_superadmin(self, claims: AuthClaims) -> None:
+        "Verifica que el usuario tenga rol de superadministrador."
         if claims.role != "superadministrador":
             raise Forbidden("Se requiere rol superadministrador")
 
     def ensure_can_manage_area(self, claims: AuthClaims, area_id: int) -> Area:
+        "Verifica si el usuario puede administrar el área dada."
         area = self._get_area(area_id)
         if area is None:
             raise Forbidden("Área fuera de alcance")
@@ -221,6 +249,7 @@ class ScopeAuthorizer:
         raise Forbidden("El usuario no puede administrar esta área")
 
     def ensure_can_create_area(self, claims: AuthClaims, plant_id: int) -> None:
+        "Verifica si el usuario puede crear un área en la planta dada."
         if claims.role == "superadministrador":
             return
 
@@ -238,6 +267,7 @@ class ScopeAuthorizer:
     def ensure_can_manage_equipment(
         self, claims: AuthClaims, equipment_id: int
     ) -> Equipment:
+        "Verifica si el usuario puede administrar el equipo dado."
         equipment = self._get_equipment(equipment_id)
         if equipment is None:
             raise Forbidden("Equipo fuera de alcance")
@@ -254,6 +284,7 @@ class ScopeAuthorizer:
         raise Forbidden("El usuario no puede administrar este equipo")
 
     def ensure_can_create_equipment(self, claims: AuthClaims, area_id: int) -> None:
+        "Verifica si el usuario puede crear un equipo en el área dada."
         if claims.role == "superadministrador":
             return
 
@@ -261,9 +292,12 @@ class ScopeAuthorizer:
             raise Forbidden("Solo administradores pueden crear equipos")
 
         if area_id not in set(claims.areas):
-            raise Forbidden("El área del equipo no está en el alcance del administrador")
+            raise Forbidden(
+                "El área del equipo no está en el alcance del administrador"
+            )
 
     def ensure_can_manage_system(self, claims: AuthClaims, system_id: int) -> System:
+        "Verifica si el usuario puede administrar el sistema dado."
         system = self._get_system(system_id)
         if system is None:
             raise Forbidden("Sistema fuera de alcance")
@@ -274,14 +308,12 @@ class ScopeAuthorizer:
 
         return system
 
-    def ensure_can_create_system(
-        self, claims: AuthClaims, equipment_id: int
-    ) -> None:
+    def ensure_can_create_system(self, claims: AuthClaims, equipment_id: int) -> None:
+        "Verifica si el usuario puede crear un sistema en el equipo dado."
         self.ensure_can_manage_equipment(claims, equipment_id)
 
-    def filter_areas(
-        self, claims: AuthClaims, plant_id: int, areas: Sequence[Area]
-    ) -> list[Area]:
+    def filter_areas(self, claims: AuthClaims, areas: Sequence[Area]) -> list[Area]:
+        "Filtra áreas según los claims del usuario."
         if claims.role in {"superadministrador", "invitado"}:
             return list(areas)
 
@@ -306,6 +338,7 @@ class ScopeAuthorizer:
     def filter_equipment(
         self, claims: AuthClaims, area_id: int, equipment: Sequence[Equipment]
     ) -> list[Equipment]:
+        "Filtra equipos según los claims del usuario."
         if claims.role in {"superadministrador", "invitado"}:
             return list(equipment)
 
@@ -323,6 +356,7 @@ class ScopeAuthorizer:
     def filter_systems(
         self, claims: AuthClaims, equipment_id: int, systems: Sequence[System]
     ) -> list[System]:
+        "Filtra sistemas según los claims del usuario."
         try:
             self.ensure_can_manage_equipment(claims, equipment_id)
         except Forbidden:
@@ -333,5 +367,9 @@ class ScopeAuthorizer:
     def _areas_from_ids(self, area_ids: Iterable[int]) -> list[Area | None]:
         return [self._get_area(area_id) for area_id in area_ids]
 
-    def _equipment_from_ids(self, equipment_ids: Iterable[int]) -> list[Equipment | None]:
-        return [self._get_equipment(eq_id) for eq_id in equipment_ids if eq_id is not None]
+    def _equipment_from_ids(
+        self, equipment_ids: Iterable[int]
+    ) -> list[Equipment | None]:
+        return [
+            self._get_equipment(eq_id) for eq_id in equipment_ids if eq_id is not None
+        ]

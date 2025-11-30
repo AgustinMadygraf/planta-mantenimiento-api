@@ -37,9 +37,7 @@ def build_equipment_blueprint(
     @equipment_bp.put("/<int:equipment_id>")
     def update_equipment(equipment_id: int):
         claims = auth_service.require_claims(request)
-        equipment = scope_authorizer.ensure_can_manage_equipment(
-            claims, equipment_id
-        )
+        equipment = scope_authorizer.ensure_can_manage_equipment(claims, equipment_id)
 
         payload = _require_json()
         update_data = {
@@ -61,9 +59,7 @@ def build_equipment_blueprint(
     @equipment_bp.delete("/<int:equipment_id>")
     def delete_equipment(equipment_id: int):
         claims = auth_service.require_claims(request)
-        equipment = scope_authorizer.ensure_can_manage_equipment(
-            claims, equipment_id
-        )
+        equipment = scope_authorizer.ensure_can_manage_equipment(claims, equipment_id)
 
         deleted = delete_equipment_use_case.execute(equipment.id)
         if not deleted:

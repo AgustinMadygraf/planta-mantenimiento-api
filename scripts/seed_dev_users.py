@@ -25,6 +25,7 @@ def _build_repo() -> SqlAlchemyUserRepository:
 
 
 def main() -> None:
+    "Puebla la base de datos con usuarios de demostración."
     logger.info("Cargando usuarios de demostración en la base de datos…")
     try:
         repo = _build_repo()

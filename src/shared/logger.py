@@ -10,7 +10,9 @@ class FlaskStyleFormatter(logging.Formatter):
     """Formateador inspirado en el handler por defecto de Flask."""
 
     def __init__(self) -> None:
-        super().__init__("[%(asctime)s] %(levelname)s in %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S")
+        super().__init__(
+            "[%(asctime)s] %(levelname)s in %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+        )
 
     def format(self, record: logging.LogRecord) -> str:  # type: ignore[override]
         message = super().format(record)
@@ -37,5 +39,6 @@ def get_logger(name: str = "planta-mantenimiento") -> logging.Logger:
         logger.propagate = False
 
     return logger
+
 
 __all__ = ["get_logger", "FlaskStyleFormatter"]

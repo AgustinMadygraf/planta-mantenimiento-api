@@ -1,9 +1,12 @@
-"""Repositorio de usuarios respaldado por SQLAlchemy."""
+"""
+Path: src/infrastructure/sqlalchemy/user_repository.py
+"""
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 from contextlib import contextmanager
+import json
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -38,7 +41,9 @@ class SqlAlchemyUserRepository(UserRepository):
             with self._session_factory() as new_session, new_session.begin():
                 yield new_session
 
-    def get_by_username(self, username: str, *, session: Session | None = None) -> User | None:
+    def get_by_username(
+        self, username: str, *, session: Session | None = None
+    ) -> User | None:
         with self._session_scope(session) as db:
             result = db.execute(
                 select(UserModel).where(UserModel.username == username)
@@ -62,8 +67,8 @@ class SqlAlchemyUserRepository(UserRepository):
                 username=username,
                 password_hash=generate_password_hash(password),
                 role=role,
-                areas=list(areas),
-                equipos=list(equipos),
+                areas=json.dumps(areas) if areas else "",
+                equipos=json.dumps(equipos) if equipos else "",
             )
             db.add(model)
             db.flush()
