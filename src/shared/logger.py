@@ -3,7 +3,7 @@
 import logging
 import sys
 
-from src.shared.config import get_config
+from src.shared.config import get_config, get_is_debug
 
 
 class FlaskStyleFormatter(logging.Formatter):
@@ -24,7 +24,8 @@ def get_logger(name: str = "planta-mantenimiento") -> logging.Logger:
     """Devuelve un logger configurado para consola."""
 
     config = get_config()
-    log_level = str(config.get("LOG_LEVEL", "DEBUG")).upper()
+    is_debug = get_is_debug()
+    log_level = "DEBUG" if is_debug else str(config.get("LOG_LEVEL", "INFO")).upper()
     logger = logging.getLogger(name)
 
     if not logger.handlers:

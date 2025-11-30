@@ -154,3 +154,9 @@ def get_superadmin_credentials(
     username = get_env("AUTH_SUPERADMIN_USERNAME", username_default)
     password = get_env("AUTH_SUPERADMIN_PASSWORD", password_default)
     return username, password
+
+
+def get_is_debug(default: str = "true") -> bool:
+    """Indica si se debe mostrar mensajes de debug en el logger."""
+    value = get_env("IS_DEBUG", default)
+    return str(value).lower() in {"1", "true", "yes"}
