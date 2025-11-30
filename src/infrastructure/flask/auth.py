@@ -312,8 +312,10 @@ class ScopeAuthorizer:
         "Verifica si el usuario puede crear un sistema en el equipo dado."
         self.ensure_can_manage_equipment(claims, equipment_id)
 
-    def filter_areas(self, claims: AuthClaims, areas: Sequence[Area]) -> list[Area]:
-        "Filtra áreas según los claims del usuario."
+    def filter_areas(
+        self, claims: AuthClaims, plant_id: int, areas: Sequence[Area]
+    ) -> list[Area]:
+        "Filtra áreas según los claims del usuario y el plant_id solicitado."
         if claims.role in {"superadministrador", "invitado"}:
             return list(areas)
 
