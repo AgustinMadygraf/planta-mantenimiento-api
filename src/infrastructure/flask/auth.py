@@ -121,11 +121,15 @@ class AuthService:
         )
 
     def require_claims(self, request: Request) -> AuthClaims:
-        auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
+        auth_header = request.headers.get("Authorization", "").strip()
+        if not auth_header:
             raise Unauthorized("Falta token de autenticación")
 
-        token = auth_header.removeprefix("Bearer ").strip()
+        scheme, _, token = auth_header.partition(" ")
+        if scheme.lower() != "bearer":
+            raise Unauthorized("Falta token de autenticación")
+
+        token = token.strip()
         if not token:
             raise Unauthorized("Token incompleto")
 
