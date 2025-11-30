@@ -12,7 +12,7 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.system import System
-from src.shared.config import get_env
+from src.shared.config import get_env, get_superadmin_credentials
 from src.shared.logger import get_logger
 
 
@@ -60,10 +60,12 @@ class AuthUser(AuthClaims):
 def _default_users() -> dict[str, AuthUser]:
     """Usuarios de demostración acordes a los roles del frontend."""
 
+    superadmin_username, superadmin_password = get_superadmin_credentials()
+
     return {
-        "superadmin": AuthUser(
-            username="superadmin",
-            password="superadmin",
+        superadmin_username: AuthUser(
+            username=superadmin_username,
+            password=superadmin_password,
             role="superadministrador",
             areas=[],
             equipos=[],
@@ -284,7 +286,9 @@ class ScopeAuthorizer:
 
         if claims.role == "maquinista":
             allowed_equipment = {
-                eq.id: eq for eq in self._equipment_from_ids(claims.equipos)
+                eq.id: eq
+                for eq in self._equipment_from_ids(claims.equipos)
+                if eq is not None
             }
             return [
                 area

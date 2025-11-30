@@ -1,11 +1,22 @@
 """Modelos ORM aislados en la capa de infraestructura."""
 
-from sqlalchemy import ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
     """Declarative base para los modelos de persistencia."""
+
+
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(50), nullable=False)
+    areas: Mapped[str | None] = mapped_column(Text, nullable=True)
+    equipos: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class PlantModel(Base):
@@ -86,4 +97,11 @@ class SystemModel(Base):
     )
 
 
-__all__ = ["Base", "PlantModel", "AreaModel", "EquipmentModel", "SystemModel"]
+__all__ = [
+    "Base",
+    "UserModel",
+    "PlantModel",
+    "AreaModel",
+    "EquipmentModel",
+    "SystemModel",
+]

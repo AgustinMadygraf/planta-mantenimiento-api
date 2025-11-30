@@ -139,3 +139,18 @@ def get_cors_origins(default: str = "http://localhost:5173") -> list[str]:
         return [default]
 
     return [origin.strip() for origin in origins.split(",") if origin.strip()]
+
+
+def get_superadmin_credentials(
+    *, username_default: str = "superadmin", password_default: str = "superadmin"
+) -> tuple[str, str]:
+    """Obtiene las credenciales del superadministrador desde variables de entorno.
+
+    Permite mantener un usuario de respaldo independiente de MySQL leyendo
+    `AUTH_SUPERADMIN_USERNAME` y `AUTH_SUPERADMIN_PASSWORD` desde `.env` o el
+    entorno. Si no están definidas, aplica valores seguros para desarrollo.
+    """
+
+    username = get_env("AUTH_SUPERADMIN_USERNAME", username_default)
+    password = get_env("AUTH_SUPERADMIN_PASSWORD", password_default)
+    return username, password
