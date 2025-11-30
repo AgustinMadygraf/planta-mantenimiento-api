@@ -15,6 +15,7 @@ API de demostración para gestionar plantas industriales, áreas, equipos y sist
    pip install fastapi uvicorn flask SQLAlchemy PyMySQL
    ```
 3. Copiar `env.example` a `.env` y ajustar credenciales MySQL si es necesario.
+   - Define `AUTH_SECRET_KEY` con una clave larga, aleatoria y distinta por entorno; rota el valor cada vez que se sospeche una exposición.
    - Si usas un frontend en otro origen, ajusta `CORS_ORIGINS` (lista separada por comas). Por defecto se permite `http://localhost:5173`.
 4. Iniciar el servidor en modo recarga (FastAPI):
    ```bash
@@ -99,6 +100,7 @@ python start_db.py
 Variables de entorno soportadas (con valores por defecto):
 
 ```
+AUTH_SECRET_KEY=<clave obligatoria sin valor por defecto>
 DB_HOST=localhost
 DB_PORT=3306
 DB_USER=root

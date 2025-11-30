@@ -27,6 +27,26 @@ ALLOWED_ROLES = {
 }
 
 
+def _require_secret_key(secret_key: str | None) -> str:
+    """Obtiene la clave de firma desde argumentos o entorno.
+
+    Lanza una excepción descriptiva cuando no se define `AUTH_SECRET_KEY`,
+    evitando arrancar la aplicación con secretos débiles o por defecto.
+    """
+
+    if secret_key:
+        return secret_key
+
+    env_secret = get_env("AUTH_SECRET_KEY")
+    if env_secret:
+        return env_secret
+
+    raise RuntimeError(
+        "AUTH_SECRET_KEY es obligatorio. Define una clave fuerte en las variables "
+        "de entorno (.env) antes de arrancar la aplicación."
+    )
+
+
 def mask_authorization_header(auth_header: str) -> str:
     """Devuelve una versión segura del header Authorization para logging."""
 
@@ -102,7 +122,7 @@ class AuthService:
         token_ttl_seconds: int | None = None,
         users: Mapping[str, AuthUser] | None = None,
     ) -> None:
-        self._secret_key = secret_key or get_env("AUTH_SECRET_KEY", "dev-secret-key")
+        self._secret_key = _require_secret_key(secret_key)
         self._token_ttl = token_ttl_seconds or int(
             get_env("AUTH_TOKEN_TTL_SECONDS", "3600")
         )
