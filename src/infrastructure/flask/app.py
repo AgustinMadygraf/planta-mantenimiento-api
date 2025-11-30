@@ -5,7 +5,7 @@ Path: src/infrastructure/flask/app.py
 from flask import Flask, request, redirect
 from werkzeug.exceptions import HTTPException
 
-from src.infrastructure.flask.auth import mask_authorization_header
+from src.infrastructure.flask.auth import AuthService, mask_authorization_header
 from src.infrastructure.flask.routes import build_blueprint
 from src.infrastructure.flask.error_handlers import (
     handle_http_exception,
@@ -14,6 +14,7 @@ from src.infrastructure.flask.error_handlers import (
 from src.infrastructure.sqlalchemy import (
     SqlAlchemyPlantRepository,
     SqlAlchemyUnitOfWork,
+    SqlAlchemyUserRepository,
 )
 from src.infrastructure.sqlalchemy.config import load_db_config
 from src.infrastructure.sqlalchemy.session import (
@@ -44,13 +45,18 @@ def create_app() -> Flask:
     engine = create_engine_from_config(config)
     session_factory: SessionFactory = build_session_factory(engine)
     repository = SqlAlchemyPlantRepository(session_factory)
+    user_repository = SqlAlchemyUserRepository(session_factory)
 
     def make_uow() -> SqlAlchemyUnitOfWork:
         return SqlAlchemyUnitOfWork(session_factory)
 
     uow_factory = make_uow
 
-    flask_app.register_blueprint(build_blueprint(repository, uow_factory))
+    auth_service = AuthService(user_repository=user_repository)
+
+    flask_app.register_blueprint(
+        build_blueprint(repository, uow_factory, auth_service=auth_service)
+    )
     flask_app.register_error_handler(HTTPException, handle_http_exception)
     flask_app.register_error_handler(Exception, handle_unexpected_exception)
 
