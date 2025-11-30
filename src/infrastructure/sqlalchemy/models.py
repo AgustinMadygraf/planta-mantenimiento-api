@@ -1,33 +1,37 @@
-"""Modelos ORM aislados en la capa de infraestructura."""
+"""
+Path: src/infrastructure/sqlalchemy/models.py
+"""
 
 from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
-    """Declarative base para los modelos de persistencia."""
+    "Declarative base para los modelos de persistencia."
 
 
 class UserModel(Base):
+    " Modelo ORM para usuarios."
     __tablename__ = "users"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    username: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    role: Mapped[str] = mapped_column(String(50), nullable=False)
-    areas: Mapped[str | None] = mapped_column(Text, nullable=True)
-    equipos: Mapped[str | None] = mapped_column(Text, nullable=True)
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    username = mapped_column(String(100), nullable=False, unique=True)
+    password_hash = mapped_column(String(255), nullable=False)
+    role = mapped_column(String(50), nullable=False)
+    areas = mapped_column(Text, nullable=True)
+    equipos = mapped_column(Text, nullable=True)
 
 
 class PlantModel(Base):
+    "Modelo ORM para plantas."
     __tablename__ = "plants"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(150), nullable=False, unique=True)
-    location: Mapped[str] = mapped_column(String(255), nullable=True)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="operativa")
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name = mapped_column(String(150), nullable=False, unique=True)
+    location = mapped_column(String(255), nullable=True)
+    status = mapped_column(String(50), nullable=False, default="operativa")
 
-    areas: Mapped[list["AreaModel"]] = relationship(
+    areas = relationship(
         "AreaModel",
         back_populates="plant",
         cascade="all, delete-orphan",
@@ -36,20 +40,21 @@ class PlantModel(Base):
 
 
 class AreaModel(Base):
+    "Modelo ORM para áreas."
     __tablename__ = "areas"
     __table_args__ = (
         UniqueConstraint("plant_id", "name", name="uq_area_name_per_plant"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    plant_id: Mapped[int] = mapped_column(
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    plant_id = mapped_column(
         ForeignKey("plants.id", ondelete="CASCADE"), nullable=False
     )
-    name: Mapped[str] = mapped_column(String(150), nullable=False)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="operativa")
+    name = mapped_column(String(150), nullable=False)
+    status = mapped_column(String(50), nullable=False, default="operativa")
 
-    plant: Mapped[PlantModel] = relationship("PlantModel", back_populates="areas")
-    equipment: Mapped[list["EquipmentModel"]] = relationship(
+    plant = relationship("PlantModel", back_populates="areas")
+    equipment = relationship(
         "EquipmentModel",
         back_populates="area",
         cascade="all, delete-orphan",
@@ -58,41 +63,42 @@ class AreaModel(Base):
 
 
 class EquipmentModel(Base):
+    "Modelo ORM para equipos."
     __tablename__ = "equipment"
     __table_args__ = (
         UniqueConstraint("area_id", "name", name="uq_equipment_name_per_area"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    area_id: Mapped[int] = mapped_column(
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    area_id = mapped_column(
         ForeignKey("areas.id", ondelete="CASCADE"), nullable=False
     )
-    name: Mapped[str] = mapped_column(String(150), nullable=False)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="operativo")
+    name = mapped_column(String(150), nullable=False)
+    status = mapped_column(String(50), nullable=False, default="operativo")
 
-    area: Mapped[AreaModel] = relationship("AreaModel", back_populates="equipment")
-    systems: Mapped[list["SystemModel"]] = relationship(
+    area = relationship("AreaModel", back_populates="equipment")
+    systems = relationship(
         "SystemModel",
         back_populates="equipment",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
 
-
 class SystemModel(Base):
+    "Modelo ORM para sistemas."
     __tablename__ = "systems"
     __table_args__ = (
         UniqueConstraint("equipment_id", "name", name="uq_system_name_per_equipment"),
     )
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    equipment_id: Mapped[int] = mapped_column(
+    id = mapped_column(Integer, primary_key=True, autoincrement=True)
+    equipment_id = mapped_column(
         ForeignKey("equipment.id", ondelete="CASCADE"), nullable=False
     )
-    name: Mapped[str] = mapped_column(String(150), nullable=False)
-    status: Mapped[str] = mapped_column(String(50), nullable=False, default="operativo")
+    name = mapped_column(String(150), nullable=False)
+    status = mapped_column(String(50), nullable=False, default="operativo")
 
-    equipment: Mapped[EquipmentModel] = relationship(
+    equipment = relationship(
         "EquipmentModel", back_populates="systems"
     )
 

@@ -1,4 +1,6 @@
-"""Inserta usuarios de demostración para entornos de desarrollo."""
+"""
+Path: scripts/seed_dev_users.py
+"""
 
 from __future__ import annotations
 
