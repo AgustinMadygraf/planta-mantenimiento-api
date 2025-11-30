@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, Mapping, Sequence
+from typing import Callable, Iterable, Sequence
 
 from flask import Request
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from werkzeug.exceptions import Forbidden, Unauthorized
+from werkzeug.security import check_password_hash
 
 from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.system import System
+from src.entities.user import User
 from src.shared.config import get_env
 from src.shared.logger import get_logger
+from src.infrastructure.user_repository import InMemoryUserRepository, UserRepository
 
 
 logger = get_logger(__name__)
@@ -52,46 +55,6 @@ class AuthClaims:
     equipos: list[int]
 
 
-@dataclass(slots=True)
-class AuthUser(AuthClaims):
-    password: str
-
-
-def _default_users() -> dict[str, AuthUser]:
-    """Usuarios de demostración acordes a los roles del frontend."""
-
-    return {
-        "superadmin": AuthUser(
-            username="superadmin",
-            password="superadmin",
-            role="superadministrador",
-            areas=[],
-            equipos=[],
-        ),
-        "admin": AuthUser(
-            username="admin",
-            password="admin",
-            role="administrador",
-            areas=[101, 201],
-            equipos=[],
-        ),
-        "maquinista": AuthUser(
-            username="maquinista",
-            password="maquinista",
-            role="maquinista",
-            areas=[],
-            equipos=[1001],
-        ),
-        "invitado": AuthUser(
-            username="invitado",
-            password="invitado",
-            role="invitado",
-            areas=[],
-            equipos=[],
-        ),
-    }
-
-
 class AuthService:
     """Emite y valida tokens firmados con claims de autorización."""
 
@@ -100,29 +63,32 @@ class AuthService:
         *,
         secret_key: str | None = None,
         token_ttl_seconds: int | None = None,
-        users: Mapping[str, AuthUser] | None = None,
+        user_repository: UserRepository | None = None,
     ) -> None:
         self._secret_key = secret_key or get_env("AUTH_SECRET_KEY", "dev-secret-key")
         self._token_ttl = token_ttl_seconds or int(
             get_env("AUTH_TOKEN_TTL_SECONDS", "3600")
         )
-        self._users = dict(users or _default_users())
+        self._user_repository = user_repository or InMemoryUserRepository.with_defaults()
         self._serializer = URLSafeTimedSerializer(self._secret_key, salt="auth")
 
     def issue_token(self, username: str, password: str) -> str:
-        user = self._users.get(username)
-        if user is None or user.password != password:
+        user = self._user_repository.get_by_username(username)
+        if user is None or not check_password_hash(user.password_hash, password):
             logger.warning("Intento de login con credenciales inválidas", extra={"username": username})
             raise Unauthorized("Credenciales inválidas")
 
         logger.info("Login exitoso", extra={"username": username})
-        payload = {
+        payload = self._claims_from_user(user)
+        return self._serializer.dumps(payload)
+
+    def _claims_from_user(self, user: User) -> dict[str, object]:
+        return {
             "username": user.username,
             "role": user.role,
-            "areas": user.areas,
-            "equipos": user.equipos,
+            "areas": list(user.areas),
+            "equipos": list(user.equipos),
         }
-        return self._serializer.dumps(payload)
 
     def decode_token(self, token: str) -> AuthClaims:
         try:
