@@ -27,6 +27,23 @@ ALLOWED_ROLES = {
 }
 
 
+def mask_authorization_header(auth_header: str) -> str:
+    """Devuelve una versión segura del header Authorization para logging."""
+
+    scheme, _, token = auth_header.partition(" ")
+    token = token.strip()
+
+    if not token:
+        return scheme or "<sin esquema>"
+
+    if len(token) <= 8:
+        masked = f"{token[:2]}...{token[-2:]}"
+    else:
+        masked = f"{token[:4]}...{token[-4:]}"
+
+    return f"{scheme} {masked}".strip()
+
+
 @dataclass(slots=True)
 class AuthClaims:
     username: str
@@ -133,20 +150,36 @@ class AuthService:
     def require_claims(self, request: Request) -> AuthClaims:
         auth_header = request.headers.get("Authorization", "").strip()
         if not auth_header:
-            logger.warning("Solicitud sin header Authorization")
+            logger.warning(
+                "Solicitud sin header Authorization",
+                extra={
+                    "method": request.method,
+                    "path": request.path,
+                    "headers_presentes": sorted(request.headers.keys()),
+                },
+            )
             raise Unauthorized("Falta token de autenticación")
 
         scheme, _, token = auth_header.partition(" ")
         if scheme.lower() != "bearer":
-            logger.warning("Esquema de autorización inválido", extra={"scheme": scheme})
+            logger.warning(
+                "Esquema de autorización inválido",
+                extra={"scheme": scheme, "auth_header": mask_authorization_header(auth_header)},
+            )
             raise Unauthorized("Falta token de autenticación")
 
         token = token.strip()
         if not token:
-            logger.warning("Token vacío en header Authorization")
+            logger.warning(
+                "Token vacío en header Authorization",
+                extra={"auth_header": mask_authorization_header(auth_header)},
+            )
             raise Unauthorized("Token incompleto")
 
-        logger.debug("Token recibido, procediendo a validación")
+        logger.debug(
+            "Token recibido, procediendo a validación",
+            extra={"auth_header": mask_authorization_header(auth_header)},
+        )
         return self.decode_token(token)
 
 
