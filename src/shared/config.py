@@ -44,7 +44,7 @@ def load_env(env_path: str = ".env") -> bool:
             return load_dotenv(path, override=False)
         except (OSError, UnicodeError) as exc:
             raise RuntimeError(f"No se pudo cargar {env_path}: {exc}") from exc
-        except Exception as exc:  # pragma: no cover - visibiliza fallos inesperados
+        except Exception:
             logger.exception("Carga fallida de %s con python-dotenv", env_path)
             raise
 
@@ -106,10 +106,12 @@ def get_mysql_config() -> Dict[str, Any]:
 
 
 def get_use_db() -> Optional[str]:
+    "Indica si se debe usar la base de datos según configuración."
     return get_env("USE_DB")
 
 
 def get_static_path() -> str:
+    "Devuelve la ruta al directorio de archivos estáticos."
     return get_env("STATIC_PATH", "static")
 
 
