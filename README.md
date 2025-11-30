@@ -31,7 +31,8 @@ Más detalles de instalación (entorno, variables `DB_*`, creación de tablas y 
 - Usa las mismas rutas bajo el prefijo `/api` y el mismo repositorio SQLAlchemy configurado por variables `DB_*`.
 
 ## Endpoints principales
-Las rutas siguen el contrato descrito en `docs/backend-endpoints.md` y devuelven cuerpos en español.
+Las rutas siguen el contrato descrito en `docs/backend-endpoints.md` y devuelven cuerpos en español. Para compatibilidad con el frontend Vue, se detalla el contrato específico consumido por la UI en `docs/frontend-api-contract.md`.
+- El formato de errores esperado por la carga jerárquica de activos se resume en `docs/asset-loading-error-report.md`.
 
 ### Plantas
 - `GET /api/plantas` → lista de plantas.
