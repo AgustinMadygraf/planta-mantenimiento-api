@@ -5,6 +5,7 @@ Path: src/infrastructure/flask/app.py
 from flask import Flask, request, redirect
 from werkzeug.exceptions import HTTPException
 
+from src.infrastructure.flask.auth import mask_authorization_header
 from src.infrastructure.flask.routes import build_blueprint
 from src.infrastructure.flask.error_handlers import (
     handle_http_exception,
@@ -21,7 +22,7 @@ from src.infrastructure.sqlalchemy.session import (
     create_engine_from_config,
 )
 from src.shared.config import get_cors_origins, get_env
-from src.shared.logger_fastapi import get_logger
+from src.shared.logger import get_logger
 
 logger = get_logger("flask-app")
 
@@ -52,6 +53,27 @@ def create_app() -> Flask:
     flask_app.register_blueprint(build_blueprint(repository, uow_factory))
     flask_app.register_error_handler(HTTPException, handle_http_exception)
     flask_app.register_error_handler(Exception, handle_unexpected_exception)
+
+    @flask_app.before_request
+    def log_request_context():
+        if request.method == "OPTIONS":
+            return
+
+        auth_header = request.headers.get("Authorization")
+        if auth_header:
+            logger.debug(
+                "Petición %s %s con Authorization %s",
+                request.method,
+                request.path,
+                mask_authorization_header(auth_header),
+            )
+        else:
+            logger.debug(
+                "Petición %s %s sin Authorization. Headers recibidos: %s",
+                request.method,
+                request.path,
+                sorted(request.headers.keys()),
+            )
 
     @flask_app.after_request
     def add_cors_headers(response):
