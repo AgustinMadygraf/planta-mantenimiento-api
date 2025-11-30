@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from flask import Flask
 
-from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
+from src.infrastructure.flask.auth import AuthClaims, AuthService, ScopeAuthorizer
 from src.infrastructure.flask.routes import build_blueprint
 from src.interface_adapters.gateways.in_memory_plant_repository import (
     InMemoryPlantRepository,
@@ -125,3 +125,24 @@ def test_maquinista_can_manage_scoped_equipment(client, auth_service):
         json={"nombre": "Fuera de alcance"},
     )
     assert forbidden.status_code == 403
+
+
+def test_filter_areas_ignores_missing_equipment_in_claims():
+    repository = InMemoryPlantRepository()
+    scope = ScopeAuthorizer(
+        get_area=GetAreaUseCase(repository).execute,
+        get_equipment=GetEquipmentUseCase(repository).execute,
+        get_system=GetSystemUseCase(repository).execute,
+    )
+
+    claims = AuthClaims(
+        username="maquinista",
+        role="maquinista",
+        areas=[],
+        equipos=[9999, 1001],
+    )
+
+    areas = repository.list_areas(1)
+    scoped = scope.filter_areas(claims, 1, areas)
+
+    assert {area.id for area in scoped} == {101}
