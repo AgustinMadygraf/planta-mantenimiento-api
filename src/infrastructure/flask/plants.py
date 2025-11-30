@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
 
+from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
 from src.infrastructure.flask.helpers import (
     _map_localized_fields,
     _require_fields,
@@ -35,6 +36,8 @@ def build_plants_blueprint(
     delete_plant_use_case: DeletePlantUseCase,
     list_plant_areas_use_case: ListPlantAreasUseCase,
     create_area_use_case: CreateAreaUseCase,
+    auth_service: AuthService,
+    scope_authorizer: ScopeAuthorizer,
 ) -> Blueprint:
     """Crea un blueprint específico para las rutas de plantas."""
 
@@ -42,11 +45,15 @@ def build_plants_blueprint(
 
     @plants_bp.get("")
     def list_plants():
+        auth_service.require_claims(request)
         plants = list_plants_use_case.execute()
         return jsonify(present_plants(plants))
 
     @plants_bp.post("")
     def create_plant():
+        claims = auth_service.require_claims(request)
+        scope_authorizer.ensure_superadmin(claims)
+
         payload = _require_json()
         _require_fields(payload, ["nombre"])
         data = _map_localized_fields(payload)
@@ -59,6 +66,7 @@ def build_plants_blueprint(
 
     @plants_bp.get("/<int:plant_id>")
     def get_plant(plant_id: int):
+        auth_service.require_claims(request)
         plant = get_plant_use_case.execute(plant_id)
         if plant is None:
             raise NotFound("Planta no encontrada")
@@ -66,6 +74,9 @@ def build_plants_blueprint(
 
     @plants_bp.put("/<int:plant_id>")
     def update_plant(plant_id: int):
+        claims = auth_service.require_claims(request)
+        scope_authorizer.ensure_superadmin(claims)
+
         payload = _require_json()
         update_data = _map_localized_fields(payload)
         if not update_data:
@@ -79,6 +90,9 @@ def build_plants_blueprint(
 
     @plants_bp.delete("/<int:plant_id>")
     def delete_plant(plant_id: int):
+        claims = auth_service.require_claims(request)
+        scope_authorizer.ensure_superadmin(claims)
+
         deleted = delete_plant_use_case.execute(plant_id)
         if not deleted:
             raise NotFound("Planta no encontrada")
@@ -86,15 +100,20 @@ def build_plants_blueprint(
 
     @plants_bp.get("/<int:plant_id>/areas")
     def list_plant_areas(plant_id: int):
+        claims = auth_service.require_claims(request)
         plant = get_plant_use_case.execute(plant_id)
         if plant is None:
             raise NotFound("Planta no encontrada")
 
         areas = list_plant_areas_use_case.execute(plant_id)
-        return jsonify(present_areas(areas))
+        scoped = scope_authorizer.filter_areas(claims, plant_id, areas)
+        return jsonify(present_areas(scoped))
 
     @plants_bp.post("/<int:plant_id>/areas")
     def create_area(plant_id: int):
+        claims = auth_service.require_claims(request)
+        scope_authorizer.ensure_can_create_area(claims, plant_id)
+
         payload = _require_json()
         _require_fields(payload, ["nombre"])
 
