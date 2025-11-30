@@ -13,8 +13,7 @@ from werkzeug.security import check_password_hash
 from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.system import System
-from src.entities.user import User
-from src.shared.config import get_env
+from src.shared.config import get_env, get_superadmin_credentials
 from src.shared.logger import get_logger
 from src.infrastructure.user_repository import InMemoryUserRepository, UserRepository
 
@@ -53,6 +52,48 @@ class AuthClaims:
     role: str
     areas: list[int]
     equipos: list[int]
+
+
+@dataclass(slots=True)
+class AuthUser(AuthClaims):
+    password: str
+
+
+def _default_users() -> dict[str, AuthUser]:
+    """Usuarios de demostración acordes a los roles del frontend."""
+
+    superadmin_username, superadmin_password = get_superadmin_credentials()
+
+    return {
+        superadmin_username: AuthUser(
+            username=superadmin_username,
+            password=superadmin_password,
+            role="superadministrador",
+            areas=[],
+            equipos=[],
+        ),
+        "admin": AuthUser(
+            username="admin",
+            password="admin",
+            role="administrador",
+            areas=[101, 201],
+            equipos=[],
+        ),
+        "maquinista": AuthUser(
+            username="maquinista",
+            password="maquinista",
+            role="maquinista",
+            areas=[],
+            equipos=[1001],
+        ),
+        "invitado": AuthUser(
+            username="invitado",
+            password="invitado",
+            role="invitado",
+            areas=[],
+            equipos=[],
+        ),
+    }
 
 
 class AuthService:
