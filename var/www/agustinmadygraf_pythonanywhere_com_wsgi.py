@@ -13,4 +13,4 @@ if PROJECT_ROOT not in sys.path:
 # Carga el archivo .env antes de importar la app
 load_dotenv(os.path.join(PROJECT_ROOT, '.env'))
 
-from src.infrastructure.flask.app import app
+from src.infrastructure.flask.app import app as application
