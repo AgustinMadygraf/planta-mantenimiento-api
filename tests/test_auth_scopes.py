@@ -88,6 +88,14 @@ def test_rejects_requests_without_token(client):
     assert response.status_code == 401
 
 
+def test_accepts_lowercase_bearer_token(client, auth_service):
+    headers = {"Authorization": f"bearer {auth_service.issue_token('admin', 'admin')}"}
+
+    response = client.get("/api/plantas", headers=headers)
+
+    assert response.status_code == 200
+
+
 def test_admin_cannot_delete_plant(client, auth_service):
     headers = _auth_headers(auth_service, "admin")
     response = client.delete("/api/plantas/1", headers=headers)
