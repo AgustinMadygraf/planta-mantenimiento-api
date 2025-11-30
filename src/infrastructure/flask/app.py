@@ -21,7 +21,7 @@ from src.infrastructure.sqlalchemy.session import (
     create_engine_from_config,
 )
 from src.shared.config import get_cors_origins, get_env
-from src.shared.logger_fastapi import get_logger
+from src.shared.logger import get_logger
 
 logger = get_logger("flask-app")
 
