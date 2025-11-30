@@ -13,6 +13,10 @@ from src.entities.area import Area
 from src.entities.equipment import Equipment
 from src.entities.system import System
 from src.shared.config import get_env
+from src.shared.logger import get_logger
+
+
+logger = get_logger(__name__)
 
 
 ALLOWED_ROLES = {
@@ -91,8 +95,10 @@ class AuthService:
     def issue_token(self, username: str, password: str) -> str:
         user = self._users.get(username)
         if user is None or user.password != password:
+            logger.warning("Intento de login con credenciales inválidas", extra={"username": username})
             raise Unauthorized("Credenciales inválidas")
 
+        logger.info("Login exitoso", extra={"username": username})
         payload = {
             "username": user.username,
             "role": user.role,
@@ -105,14 +111,18 @@ class AuthService:
         try:
             data = self._serializer.loads(token, max_age=self._token_ttl)
         except SignatureExpired as exc:  # pragma: no cover - paths cubiertos por BadSignature
+            logger.warning("Token expirado")
             raise Unauthorized("Token expirado") from exc
         except BadSignature as exc:
+            logger.warning("Token inválido")
             raise Unauthorized("Token inválido") from exc
 
         role = data.get("role")
         if role not in ALLOWED_ROLES:
+            logger.error("Token con rol no permitido", extra={"role": role})
             raise Unauthorized("Rol inválido en el token")
 
+        logger.debug("Token decodificado correctamente", extra={"username": data.get("username", ""), "role": role})
         return AuthClaims(
             username=data.get("username", ""),
             role=role,
@@ -121,14 +131,22 @@ class AuthService:
         )
 
     def require_claims(self, request: Request) -> AuthClaims:
-        auth_header = request.headers.get("Authorization", "")
-        if not auth_header.startswith("Bearer "):
+        auth_header = request.headers.get("Authorization", "").strip()
+        if not auth_header:
+            logger.warning("Solicitud sin header Authorization")
             raise Unauthorized("Falta token de autenticación")
 
-        token = auth_header.removeprefix("Bearer ").strip()
+        scheme, _, token = auth_header.partition(" ")
+        if scheme.lower() != "bearer":
+            logger.warning("Esquema de autorización inválido", extra={"scheme": scheme})
+            raise Unauthorized("Falta token de autenticación")
+
+        token = token.strip()
         if not token:
+            logger.warning("Token vacío en header Authorization")
             raise Unauthorized("Token incompleto")
 
+        logger.debug("Token recibido, procediendo a validación")
         return self.decode_token(token)
 
 
