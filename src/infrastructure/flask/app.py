@@ -2,7 +2,7 @@
 Path: src/infrastructure/flask/app.py
 """
 
-from flask import Flask, request, redirect  # agrega redirect
+from flask import Flask, request, redirect
 
 from src.infrastructure.flask.routes import build_blueprint
 from src.infrastructure.sqlalchemy import (
@@ -22,8 +22,7 @@ logger = get_logger("flask-app")
 
 
 def create_app() -> Flask:
-    """Bootstrap Flask application with shared repository and routes."""
-
+    "Bootstrap Flask application with shared repository and routes."
     flask_app = Flask(__name__)
     cors_origins = get_cors_origins()
 

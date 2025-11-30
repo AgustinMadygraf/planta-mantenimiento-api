@@ -1,4 +1,7 @@
-"""Crea las tablas de MySQL sin usar migraciones."""
+"""
+Path: start_db.py
+Crea las tablas de MySQL sin usar migraciones.
+"""
 
 import sys
 
@@ -13,6 +16,7 @@ logger = get_logger("start_db")
 
 
 def main() -> None:
+    "Crea las tablas en la base de datos MySQL según los modelos definidos."
     try:
         config = load_db_config()
     except RuntimeError as exc:  # problemas al leer .env o castear valores

@@ -3,3 +3,5 @@ venv/
 .env
 certs/key.pem
 certs/cert.pem
+.coverage
+.vscode/settings.json

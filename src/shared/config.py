@@ -1,8 +1,5 @@
-"""Utilidades de configuración y carga de entorno.
-
-Centraliza la lectura de variables de entorno y proporciona defaults
-seguros para el proyecto. Tolera la ausencia de `.env` y permite
-sobrescribir valores desde el entorno del sistema.
+"""
+Path: src/shared/config.py
 """
 
 from __future__ import annotations
