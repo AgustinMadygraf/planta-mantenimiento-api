@@ -3,8 +3,13 @@ Path: src/infrastructure/flask/app.py
 """
 
 from flask import Flask, request, redirect
+from werkzeug.exceptions import HTTPException
 
 from src.infrastructure.flask.routes import build_blueprint
+from src.infrastructure.flask.error_handlers import (
+    handle_http_exception,
+    handle_unexpected_exception,
+)
 from src.infrastructure.sqlalchemy import (
     SqlAlchemyPlantRepository,
     SqlAlchemyUnitOfWork,
@@ -45,6 +50,8 @@ def create_app() -> Flask:
     uow_factory = make_uow
 
     flask_app.register_blueprint(build_blueprint(repository, uow_factory))
+    flask_app.register_error_handler(HTTPException, handle_http_exception)
+    flask_app.register_error_handler(Exception, handle_unexpected_exception)
 
     @flask_app.after_request
     def add_cors_headers(response):
