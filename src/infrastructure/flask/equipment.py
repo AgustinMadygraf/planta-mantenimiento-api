@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify
-from werkzeug.exceptions import BadRequest, NotFound
+from flask import Blueprint, jsonify, request
+from werkzeug.exceptions import NotFound
 
-from src.infrastructure.flask.helpers import _require_fields, _require_json
+from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
+from src.infrastructure.flask.helpers import _require_json, _require_nombre
 from src.interface_adapters.presenters.equipment_presenter import (
     present as present_equipment,
 )
@@ -26,6 +27,8 @@ def build_equipment_blueprint(
     delete_equipment_use_case: DeleteEquipmentUseCase,
     list_equipment_systems_use_case: ListEquipmentSystemsUseCase,
     create_system_use_case: CreateSystemUseCase,
+    auth_service: AuthService,
+    scope_authorizer: ScopeAuthorizer,
 ) -> Blueprint:
     """Crea un blueprint específico para las rutas de equipos."""
 
@@ -33,18 +36,15 @@ def build_equipment_blueprint(
 
     @equipment_bp.put("/<int:equipment_id>")
     def update_equipment(equipment_id: int):
-        payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
+        claims = auth_service.require_claims(request)
+        equipment = scope_authorizer.ensure_can_manage_equipment(
+            claims, equipment_id
+        )
 
-        updated = update_equipment_use_case.execute(equipment_id, **update_data)
+        payload = _require_json()
+        update_data = {"name": _require_nombre(payload)}
+
+        updated = update_equipment_use_case.execute(equipment.id, **update_data)
         if updated is None:
             raise NotFound("Equipo no encontrado")
 
@@ -52,24 +52,34 @@ def build_equipment_blueprint(
 
     @equipment_bp.delete("/<int:equipment_id>")
     def delete_equipment(equipment_id: int):
-        deleted = delete_equipment_use_case.execute(equipment_id)
+        claims = auth_service.require_claims(request)
+        equipment = scope_authorizer.ensure_can_manage_equipment(
+            claims, equipment_id
+        )
+
+        deleted = delete_equipment_use_case.execute(equipment.id)
         if not deleted:
             raise NotFound("Equipo no encontrado")
         return ("", 204)
 
     @equipment_bp.get("/<int:equipment_id>/sistemas")
     def list_equipment_systems(equipment_id: int):
+        claims = auth_service.require_claims(request)
         equipment = get_equipment_use_case.execute(equipment_id)
         if equipment is None:
             raise NotFound("Equipo no encontrado")
 
         systems = list_equipment_systems_use_case.execute(equipment_id)
-        return jsonify(present_systems(systems))
+        scoped = scope_authorizer.filter_systems(claims, equipment_id, systems)
+        return jsonify(present_systems(scoped))
 
     @equipment_bp.post("/<int:equipment_id>/sistemas")
     def create_system(equipment_id: int):
+        claims = auth_service.require_claims(request)
+        scope_authorizer.ensure_can_create_system(claims, equipment_id)
+
         payload = _require_json()
-        _require_fields(payload, ["nombre"])
+        nombre = _require_nombre(payload)
 
         equipment = get_equipment_use_case.execute(equipment_id)
         if equipment is None:
@@ -77,7 +87,7 @@ def build_equipment_blueprint(
 
         created = create_system_use_case.execute(
             equipment_id,
-            name=payload["nombre"],
+            name=nombre,
             status=payload.get("estado"),
         )
         if created is None:

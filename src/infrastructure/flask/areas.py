@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from flask import Blueprint, jsonify
-from werkzeug.exceptions import BadRequest, NotFound
+from flask import Blueprint, jsonify, request
+from werkzeug.exceptions import NotFound
 
-from src.infrastructure.flask.helpers import _require_fields, _require_json
+from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
+from src.infrastructure.flask.helpers import _require_json, _require_nombre
 from src.interface_adapters.presenters.area_presenter import present as present_area
 from src.interface_adapters.presenters.equipment_presenter import (
     present as present_equipment,
@@ -24,6 +25,8 @@ def build_areas_blueprint(
     delete_area_use_case: DeleteAreaUseCase,
     list_area_equipment_use_case: ListAreaEquipmentUseCase,
     create_equipment_use_case: CreateEquipmentUseCase,
+    auth_service: AuthService,
+    scope_authorizer: ScopeAuthorizer,
 ) -> Blueprint:
     """Crea un blueprint específico para las rutas de áreas."""
 
@@ -31,18 +34,13 @@ def build_areas_blueprint(
 
     @areas_bp.put("/<int:area_id>")
     def update_area(area_id: int):
-        payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
+        claims = auth_service.require_claims(request)
+        area = scope_authorizer.ensure_can_manage_area(claims, area_id)
 
-        updated = update_area_use_case.execute(area_id, **update_data)
+        payload = _require_json()
+        update_data = {"name": _require_nombre(payload)}
+
+        updated = update_area_use_case.execute(area.id, **update_data)
         if updated is None:
             raise NotFound("Área no encontrada")
 
@@ -50,24 +48,32 @@ def build_areas_blueprint(
 
     @areas_bp.delete("/<int:area_id>")
     def delete_area(area_id: int):
-        deleted = delete_area_use_case.execute(area_id)
+        claims = auth_service.require_claims(request)
+        area = scope_authorizer.ensure_can_manage_area(claims, area_id)
+
+        deleted = delete_area_use_case.execute(area.id)
         if not deleted:
             raise NotFound("Área no encontrada")
         return ("", 204)
 
     @areas_bp.get("/<int:area_id>/equipos")
     def list_area_equipment(area_id: int):
+        claims = auth_service.require_claims(request)
         area = get_area_use_case.execute(area_id)
         if area is None:
             raise NotFound("Área no encontrada")
 
         equipment = list_area_equipment_use_case.execute(area_id)
-        return jsonify(present_equipment_list(equipment))
+        scoped = scope_authorizer.filter_equipment(claims, area_id, equipment)
+        return jsonify(present_equipment_list(scoped))
 
     @areas_bp.post("/<int:area_id>/equipos")
     def create_equipment(area_id: int):
+        claims = auth_service.require_claims(request)
+        scope_authorizer.ensure_can_create_equipment(claims, area_id)
+
         payload = _require_json()
-        _require_fields(payload, ["nombre"])
+        nombre = _require_nombre(payload)
 
         area = get_area_use_case.execute(area_id)
         if area is None:
@@ -75,7 +81,7 @@ def build_areas_blueprint(
 
         created = create_equipment_use_case.execute(
             area_id,
-            name=payload["nombre"],
+            name=nombre,
             status=payload.get("estado"),
         )
         if created is None:
