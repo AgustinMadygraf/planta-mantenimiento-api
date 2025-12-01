@@ -107,6 +107,10 @@ def create_app() -> Flask:
     def health_check() -> tuple[dict[str, str], int]:
         return {"status": "ok"}, 200
 
+    @flask_app.route("/api/cors", methods=["GET"])
+    def cors_info():
+        return {"cors_origins": cors_origins}, 200
+
     @flask_app.route("/", methods=["GET"])
     def forward_to_web():
         web_url = get_env("WEB_URL")
