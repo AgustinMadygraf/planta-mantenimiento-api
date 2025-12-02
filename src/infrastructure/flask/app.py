@@ -4,8 +4,12 @@ Path: src/infrastructure/flask/app.py
 
 from datetime import timedelta
 
+from typing import Callable
+
 from flask import Flask, request, redirect
 from flask_jwt_extended import JWTManager
+from flask_injector import FlaskInjector
+from injector import Binder, singleton
 from werkzeug.exceptions import HTTPException
 
 from src.infrastructure.flask.auth import AuthService, mask_authorization_header
@@ -27,6 +31,10 @@ from src.infrastructure.sqlalchemy.session import (
 )
 from src.shared.config import get_cors_origins, get_env
 from src.shared.logger import get_logger
+from src.use_cases.ports.plant_repository import PlantDataRepository
+
+UnitOfWorkFactory = Callable[[], SqlAlchemyUnitOfWork]
+from src.use_cases.ports.plant_repository import PlantDataRepository
 
 logger = get_logger("flask-app")
 
@@ -124,6 +132,13 @@ def create_app() -> Flask:
     def forward_to_web():
         web_url = get_env("WEB_URL")
         return redirect(web_url, code=302)
+
+    def configure(binder: Binder) -> None:
+        binder.bind(PlantDataRepository, to=repository, scope=singleton)
+        binder.bind(UnitOfWorkFactory, to=make_uow, scope=singleton)
+        binder.bind(AuthService, to=auth_service, scope=singleton)
+
+    FlaskInjector(app=flask_app, modules=[configure])
 
     return flask_app
 

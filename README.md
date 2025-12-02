@@ -40,6 +40,10 @@ Detalles extendidos en `docs/INSTALLING.md` (entorno, variables `DB_*`, ejecucio
 - Los claims `role`, `areas` y `equipos` se incluyen como `additional_claims` y se convierten en `AuthClaims` antes de pasar a los `ScopeAuthorizer`.
 - Configura `AUTH_SECRET_KEY` y `AUTH_TOKEN_TTL_SECONDS` en `.env`; Flask expone el token TTL en `JWT_ACCESS_TOKEN_EXPIRES` para mantener la caducidad sincronizada.
 
+## Inyección de dependencias
+- `Flask-Injector` se encarga del wiring de `PlantDataRepository`, `UnitOfWorkFactory` y `AuthService` dentro de `create_app` (`src/infrastructure/flask/app.py:66-93`).
+- Mantén las dependencias registradas ahí al modificar repositorios o factories para que el binder tenga una sola fuente de verdad para toda la aplicación.
+
 ## Notas de implementacion
 - Respuestas y errores en espanol para alinear con el frontend.
 - Presenters traducen atributos de dominio a las claves esperadas por el contrato (`nombre`, `plantaId`, `areaId`, `equipoId`).

@@ -6,6 +6,8 @@
 - `src/interface_adapters` contiene controladores/presenters para Flask/FastAPI y gateways.
 - `src/infrastructure` aloja wiring, configuracion SQLAlchemy, repositorios y logging.
 - `src/shared` guarda utilidades transversales (config, logger, helpers).
+- `Flask-Injector` (en `src/infrastructure/flask/app.py`) mantiene un binder central para el repositorio, el factory de UoW y el servicio de autenticación.
+- `Flask-Injector` disponible en `src/infrastructure/flask/app.py` ataco binder with `PlantDataRepository`, `UnitOfWorkFactory` y `AuthService`.
 - `src/interface_adapters/schemas` concentra esquemas Pydantic que validan los payloads con nombres en español y entregan data ya traducida para los casos de uso.
 - `tests/` agrupa pruebas unitarias/integracion rapidas; `docs/` tiene contratos y guias.
 

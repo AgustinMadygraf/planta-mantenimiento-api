@@ -5,7 +5,7 @@ Sigue estos pasos para configurar el proyecto en un entorno local usando MySQL +
 ## Prerrequisitos
 - Python 3.10+
 - Servidor MySQL accesible y un esquema creado (por defecto `planta_mantenimiento`).
-- Dependencias: `fastapi`, `uvicorn`, `flask`, `SQLAlchemy`, `PyMySQL`, `alembic`.
+- Dependencias: `fastapi`, `uvicorn`, `flask`, `SQLAlchemy`, `PyMySQL`, `alembic`, `flask-jwt-extended`, `flask-injector`.
 
 ## 1) Crear entorno virtual (opcional)
 ```bash
@@ -15,7 +15,7 @@ source .venv/bin/activate  # En Windows: .venv\Scripts\activate
 
 ## 2) Instalar dependencias
 ```bash
-pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv alembic flask-jwt-extended
+pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv alembic flask-jwt-extended flask-injector
 ```
 
 ## 3) Configurar variables de entorno con `.env`
