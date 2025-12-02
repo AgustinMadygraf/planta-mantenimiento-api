@@ -6,8 +6,9 @@ from flask import Blueprint, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
 
 from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
-from src.infrastructure.flask.helpers import _require_json
+from src.infrastructure.flask.helpers import _require_json, _validate_payload
 from src.interface_adapters.presenters.system_presenter import present as present_system
+from src.interface_adapters.schemas import SystemUpdate
 from src.use_cases.get_system import GetSystemUseCase
 from src.use_cases.delete_system import DeleteSystemUseCase
 from src.use_cases.update_system import UpdateSystemUseCase
@@ -30,15 +31,7 @@ def build_systems_blueprint(
         system = scope_authorizer.ensure_can_manage_system(claims, system_id)
 
         payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
+        update_data = _validate_payload(payload, SystemUpdate)
 
         updated = update_system_use_case.execute(system.id, **update_data)
         if updated is None:

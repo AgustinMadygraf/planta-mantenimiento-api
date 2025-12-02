@@ -5,7 +5,8 @@ from __future__ import annotations
 from flask import Blueprint, jsonify
 
 from src.infrastructure.flask.auth import AuthService
-from src.infrastructure.flask.helpers import _require_fields, _require_json
+from src.infrastructure.flask.helpers import _require_json, _validate_payload
+from src.interface_adapters.schemas import LoginRequest
 
 
 def build_auth_blueprint(auth_service: AuthService) -> Blueprint:
@@ -14,9 +15,9 @@ def build_auth_blueprint(auth_service: AuthService) -> Blueprint:
     @auth_bp.post("/login")
     def login():
         payload = _require_json()
-        _require_fields(payload, ["username", "password"])
+        data = _validate_payload(payload, LoginRequest)
 
-        token = auth_service.issue_token(payload["username"], payload["password"])
+        token = auth_service.issue_token(data["username"], data["password"])
 
         claims = auth_service.decode_token(token)
         return jsonify(

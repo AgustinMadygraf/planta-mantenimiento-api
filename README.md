@@ -31,6 +31,10 @@ Detalles extendidos en `docs/INSTALLING.md` (entorno, variables `DB_*`, ejecucio
   Revisa el diff autogenerado antes de aplicarlo.
 - Para marcar una base existente como al día cuando el esquema ya coincide, ejecuta `alembic stamp head`.
 
+## Validación y serialización
+- Las rutas de Flask validan cada payload con los esquemas Pydantic de `src/interface_adapters/schemas`, que escuchan campos en español (`nombre`, `estado`, etc.) pero exponen `name`, `status`, `location`, etc. a los casos de uso.
+- El helper `_validate_payload` se encarga de lanzar `400 Bad Request` con mensajes detallados si algo falta o no cumple los constraints (longitud, valores en blanco). Esto mantiene los controladores ligeros y el contrato fiable.
+
 ## Notas de implementacion
 - Respuestas y errores en espanol para alinear con el frontend.
 - Presenters traducen atributos de dominio a las claves esperadas por el contrato (`nombre`, `plantaId`, `areaId`, `equipoId`).

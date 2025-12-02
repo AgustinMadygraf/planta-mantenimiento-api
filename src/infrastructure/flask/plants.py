@@ -6,11 +6,7 @@ from flask import Blueprint, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
 
 from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
-from src.infrastructure.flask.helpers import (
-    _map_localized_fields,
-    _require_fields,
-    _require_json,
-)
+from src.infrastructure.flask.helpers import _require_json, _validate_payload
 from src.interface_adapters.presenters.area_presenter import (
     present as present_area,
     present_many as present_areas,
@@ -19,6 +15,7 @@ from src.interface_adapters.presenters.plant_presenter import (
     present as present_plant,
     present_many as present_plants,
 )
+from src.interface_adapters.schemas import PlantCreate, PlantUpdate, AreaCreate
 from src.use_cases.create_area import CreateAreaUseCase
 from src.use_cases.create_plant import CreatePlantUseCase
 from src.use_cases.get_plant import GetPlantUseCase
@@ -55,13 +52,8 @@ def build_plants_blueprint(
         scope_authorizer.ensure_superadmin(claims)
 
         payload = _require_json()
-        _require_fields(payload, ["nombre"])
-        data = _map_localized_fields(payload)
-        created = create_plant_use_case.execute(
-            name=data["name"],
-            location=data.get("location"),
-            status=data.get("status"),
-        )
+        data = _validate_payload(payload, PlantCreate)
+        created = create_plant_use_case.execute(**data)
         return jsonify(present_plant(created)), 201
 
     @plants_bp.get("/<int:plant_id>")
@@ -78,9 +70,7 @@ def build_plants_blueprint(
         scope_authorizer.ensure_superadmin(claims)
 
         payload = _require_json()
-        update_data = _map_localized_fields(payload)
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
+        update_data = _validate_payload(payload, PlantUpdate)
 
         updated = update_plant_use_case.execute(plant_id, **update_data)
         if updated is None:
@@ -115,17 +105,13 @@ def build_plants_blueprint(
         scope_authorizer.ensure_can_create_area(claims, plant_id)
 
         payload = _require_json()
-        _require_fields(payload, ["nombre"])
+        data = _validate_payload(payload, AreaCreate)
 
         plant = get_plant_use_case.execute(plant_id)
         if plant is None:
             raise NotFound("Planta no encontrada")
 
-        created = create_area_use_case.execute(
-            plant_id,
-            name=payload["nombre"],
-            status=payload.get("estado"),
-        )
+        created = create_area_use_case.execute(plant_id, **data)
         if created is None:
             raise NotFound("No se pudo crear el área")
 

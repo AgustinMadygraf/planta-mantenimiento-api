@@ -6,6 +6,7 @@
 - `src/interface_adapters` contiene controladores/presenters para Flask/FastAPI y gateways.
 - `src/infrastructure` aloja wiring, configuracion SQLAlchemy, repositorios y logging.
 - `src/shared` guarda utilidades transversales (config, logger, helpers).
+- `src/interface_adapters/schemas` concentra esquemas Pydantic que validan los payloads con nombres en español y entregan data ya traducida para los casos de uso.
 - `tests/` agrupa pruebas unitarias/integracion rapidas; `docs/` tiene contratos y guias.
 
 ## Build, Test, and Development Commands
@@ -23,6 +24,7 @@ pytest --cov=src --cov-report=term-missing        # cobertura opcional
 - Python 3.x, indentacion 4 espacios, PEP 8 como base; tipado opcional preferido en casos de uso y entidades.
 - Modulos/clases en ingles (e.g., `SqlAlchemyPlantRepository`), claves JSON en espanol para la API.
 - Docstrings breves en espanol; evita logica de dominio en controladores (sigue entidad -> caso de uso -> adaptador -> infraestructura).
+- Los esquemas en `src/interface_adapters/schemas` y `_validate_payload` aseguran que los payloads inválidos produzcan 400 y que los datos pasen a los casos de uso en ingles.
 
 ## Testing Guidelines
 - Framework: `pytest`; archivos `test_*.py` en `tests/`.

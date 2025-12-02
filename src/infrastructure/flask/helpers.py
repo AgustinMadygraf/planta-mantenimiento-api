@@ -2,19 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Type
 
 from flask import request
+from pydantic import BaseModel, ValidationError
 from werkzeug.exceptions import BadRequest
-
-
-def _map_localized_fields(payload: dict[str, Any]) -> dict[str, Any]:
-    mapped = {
-        "name": payload.get("nombre"),
-        "location": payload.get("ubicacion"),
-        "status": payload.get("estado"),
-    }
-    return {key: value for key, value in mapped.items() if value is not None}
 
 
 def _require_json() -> dict[str, Any]:
@@ -24,7 +16,18 @@ def _require_json() -> dict[str, Any]:
     return data
 
 
-def _require_fields(payload: dict[str, Any], required: list[str]) -> None:
-    missing = [field for field in required if not payload.get(field)]
-    if missing:
-        raise BadRequest(f"Faltan campos obligatorios: {', '.join(missing)}")
+def _format_validation_errors(exc: ValidationError) -> str:
+    errors = []
+    for error in exc.errors():
+        loc = ".".join(str(item) for item in error.get("loc", []))
+        errors.append(f"{loc or 'body'}: {error.get('msg')}")
+    return "; ".join(errors) if errors else "Payload inválido"
+
+
+def _validate_payload(payload: dict[str, Any], schema: Type[BaseModel]) -> dict[str, Any]:
+    """Valida un payload contra un schema Pydantic y retorna datos filtrados."""
+    try:
+        validated = schema.model_validate(payload)
+    except ValidationError as exc:
+        raise BadRequest(f"Payload inválido: {_format_validation_errors(exc)}") from exc
+    return validated.model_dump(exclude_none=True)

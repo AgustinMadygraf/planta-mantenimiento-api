@@ -6,12 +6,13 @@ from flask import Blueprint, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
 
 from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
-from src.infrastructure.flask.helpers import _require_fields, _require_json
+from src.infrastructure.flask.helpers import _require_json, _validate_payload
 from src.interface_adapters.presenters.area_presenter import present as present_area
 from src.interface_adapters.presenters.equipment_presenter import (
     present as present_equipment,
     present_many as present_equipment_list,
 )
+from src.interface_adapters.schemas import AreaCreate, AreaUpdate, EquipmentCreate
 from src.use_cases.create_equipment import CreateEquipmentUseCase
 from src.use_cases.delete_area import DeleteAreaUseCase
 from src.use_cases.get_area import GetAreaUseCase
@@ -38,16 +39,7 @@ def build_areas_blueprint(
         area = scope_authorizer.ensure_can_manage_area(claims, area_id)
 
         payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
-
+        update_data = _validate_payload(payload, AreaUpdate)
         updated = update_area_use_case.execute(area.id, **update_data)
         if updated is None:
             raise NotFound("Área no encontrada")
@@ -81,17 +73,13 @@ def build_areas_blueprint(
         scope_authorizer.ensure_can_create_equipment(claims, area_id)
 
         payload = _require_json()
-        _require_fields(payload, ["nombre"])
+        data = _validate_payload(payload, EquipmentCreate)
 
         area = get_area_use_case.execute(area_id)
         if area is None:
             raise NotFound("Área no encontrada")
 
-        created = create_equipment_use_case.execute(
-            area_id,
-            name=payload["nombre"],
-            status=payload.get("estado"),
-        )
+        created = create_equipment_use_case.execute(area_id, **data)
         if created is None:
             raise NotFound("No se pudo crear el equipo")
 

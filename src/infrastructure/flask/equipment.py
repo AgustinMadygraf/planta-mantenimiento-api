@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request
 from werkzeug.exceptions import BadRequest, NotFound
 
 from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
-from src.infrastructure.flask.helpers import _require_fields, _require_json
+from src.infrastructure.flask.helpers import _require_json, _validate_payload
 from src.interface_adapters.presenters.equipment_presenter import (
     present as present_equipment,
 )
@@ -14,6 +14,7 @@ from src.interface_adapters.presenters.system_presenter import (
     present as present_system,
     present_many as present_systems,
 )
+from src.interface_adapters.schemas import EquipmentUpdate, SystemCreate
 from src.use_cases.create_system import CreateSystemUseCase
 from src.use_cases.delete_equipment import DeleteEquipmentUseCase
 from src.use_cases.get_equipment import GetEquipmentUseCase
@@ -40,15 +41,7 @@ def build_equipment_blueprint(
         equipment = scope_authorizer.ensure_can_manage_equipment(claims, equipment_id)
 
         payload = _require_json()
-        update_data = {
-            "name": payload.get("nombre"),
-            "status": payload.get("estado"),
-        }
-        update_data = {
-            key: value for key, value in update_data.items() if value is not None
-        }
-        if not update_data:
-            raise BadRequest("No se enviaron campos para actualizar")
+        update_data = _validate_payload(payload, EquipmentUpdate)
 
         updated = update_equipment_use_case.execute(equipment.id, **update_data)
         if updated is None:
@@ -83,17 +76,13 @@ def build_equipment_blueprint(
         scope_authorizer.ensure_can_create_system(claims, equipment_id)
 
         payload = _require_json()
-        _require_fields(payload, ["nombre"])
+        data = _validate_payload(payload, SystemCreate)
 
         equipment = get_equipment_use_case.execute(equipment_id)
         if equipment is None:
             raise NotFound("Equipo no encontrado")
 
-        created = create_system_use_case.execute(
-            equipment_id,
-            name=payload["nombre"],
-            status=payload.get("estado"),
-        )
+        created = create_system_use_case.execute(equipment_id, **data)
         if created is None:
             raise NotFound("No se pudo crear el sistema")
 
