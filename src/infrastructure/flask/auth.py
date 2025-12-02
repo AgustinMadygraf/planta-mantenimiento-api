@@ -5,10 +5,13 @@ Path: src/infrastructure/flask/auth.py
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Callable, Iterable, Sequence
 
 from flask import Request
-from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from flask_jwt_extended import create_access_token, decode_token
+from flask_jwt_extended.exceptions import JWTDecodeError
+from jwt.exceptions import ExpiredSignatureError
 from werkzeug.exceptions import Forbidden, Unauthorized
 from werkzeug.security import check_password_hash
 
@@ -107,7 +110,7 @@ def _default_users() -> dict[str, AuthUser]:
 
 
 class AuthService:
-    """Emite y valida tokens firmados con claims de autorización."""
+    """Emite y valida tokens firmados con claims de autorización estándar."""
 
     def __init__(
         self,
@@ -117,16 +120,23 @@ class AuthService:
         user_repository: UserRepository | None = None,
     ) -> None:
         self._secret_key = secret_key or get_env("AUTH_SECRET_KEY", "dev-secret-key")
-        self._token_ttl = token_ttl_seconds or int(
-            get_env("AUTH_TOKEN_TTL_SECONDS", "3600")
+        self._token_ttl = int(
+            token_ttl_seconds or get_env("AUTH_TOKEN_TTL_SECONDS", "3600")
         )
         self._user_repository = (
             user_repository or InMemoryUserRepository.with_defaults()
         )
-        self._serializer = URLSafeTimedSerializer(self._secret_key, salt="auth")
+
+    @property
+    def secret_key(self) -> str:
+        return self._secret_key
+
+    @property
+    def token_ttl_seconds(self) -> int:
+        return self._token_ttl
 
     def issue_token(self, username: str, password: str) -> str:
-        "Emite un token JWT si las credenciales son válidas."
+        """Emite un token JWT si las credenciales son válidas."""
         user = self._user_repository.get_by_username(username)
         if user is None or not check_password_hash(user.password_hash, password):
             logger.warning(
@@ -137,7 +147,15 @@ class AuthService:
 
         logger.info("Login exitoso", extra={"username": username})
         payload = self._claims_from_user(user)
-        return self._serializer.dumps(payload)
+        return create_access_token(
+            identity=user.username,
+            additional_claims={
+                "role": payload["role"],
+                "areas": payload["areas"],
+                "equipos": payload["equipos"],
+            },
+            expires_delta=timedelta(seconds=self._token_ttl),
+        )
 
     def _claims_from_user(self, user: User) -> dict[str, object]:
         return {
@@ -148,15 +166,13 @@ class AuthService:
         }
 
     def decode_token(self, token: str) -> AuthClaims:
-        "Decodifica y valida un token, devolviendo sus claims."
+        """Decodifica y valida un token, devolviendo sus claims."""
         try:
-            data = self._serializer.loads(token, max_age=self._token_ttl)
-        except (
-            SignatureExpired
-        ) as exc:  # pragma: no cover - paths cubiertos por BadSignature
+            data = decode_token(token)
+        except ExpiredSignatureError as exc:
             logger.warning("Token expirado")
             raise Unauthorized("Token expirado") from exc
-        except BadSignature as exc:
+        except JWTDecodeError as exc:
             logger.warning("Token inválido")
             raise Unauthorized("Token inválido") from exc
 
@@ -167,17 +183,17 @@ class AuthService:
 
         logger.debug(
             "Token decodificado correctamente",
-            extra={"username": data.get("username", ""), "role": role},
+            extra={"username": data.get("sub", ""), "role": role},
         )
         return AuthClaims(
-            username=data.get("username", ""),
+            username=data.get("sub", ""),
             role=role,
             areas=list(data.get("areas", []) or []),
             equipos=list(data.get("equipos", []) or []),
         )
 
     def require_claims(self, request: Request) -> AuthClaims:
-        "Extrae y valida los claims de autorización del header Authorization."
+        """Extrae y valida los claims de autorización del header Authorization."""
         auth_header = request.headers.get("Authorization", "").strip()
         if not auth_header:
             logger.warning(
@@ -214,8 +230,6 @@ class AuthService:
             extra={"auth_header": mask_authorization_header(auth_header)},
         )
         return self.decode_token(token)
-
-
 class ScopeAuthorizer:
     "Valida permisos por rol y alcance sobre entidades jerárquicas."
 

@@ -39,4 +39,5 @@ pytest --cov=src --cov-report=term-missing        # cobertura opcional
 ## Security & Configuration Tips
 - Usa `.env.example` como base; nunca subas credenciales. Variables `DB_*` definen conexion y pooling.
 - Alembic es el flujo oficial de migraciones y registra su progreso en `alembic_version`. No existe ya un script de bootstrap; usa `alembic upgrade head` en entornos nuevos y `alembic stamp head` solo si llegas desde un esquema preexistente.
+- `Flask-JWT-Extended` genera y valida tokens; mantén `AUTH_SECRET_KEY` y `AUTH_TOKEN_TTL_SECONDS` sincronizados con la configuracion de Flask (`JWT_SECRET_KEY`, `JWT_ACCESS_TOKEN_EXPIRES`).
 - Regenera certificados locales con `python start_ssl.py` si caducan; mantelos en `certs/`.

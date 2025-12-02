@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import pytest
+from datetime import timedelta
+
 from flask import Flask
+from flask.testing import FlaskClient
+from flask_jwt_extended import JWTManager
 
 from src.infrastructure.flask.auth import AuthService, ScopeAuthorizer
 from src.infrastructure.flask.routes import build_blueprint
@@ -50,6 +54,11 @@ def validation_client(validation_auth_service: AuthService):
     )
 
     app = Flask("validation")
+    app.config["JWT_SECRET_KEY"] = validation_auth_service.secret_key
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(
+        seconds=validation_auth_service.token_ttl_seconds
+    )
+    JWTManager(app)
     app.testing = True
     app.register_blueprint(
         build_blueprint(
@@ -62,15 +71,16 @@ def validation_client(validation_auth_service: AuthService):
     return app.test_client()
 
 
-def _auth_headers(auth_service: AuthService) -> dict[str, str]:
-    token = auth_service.issue_token("superadmin", "superadmin")
+def _auth_headers(auth_service: AuthService, client: FlaskClient) -> dict[str, str]:
+    with client.application.app_context():
+        token = auth_service.issue_token("superadmin", "superadmin")
     return {"Authorization": f"Bearer {token}"}
 
 
 def test_create_plant_requires_nombre(
     validation_client, validation_auth_service: AuthService
 ):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.post(
         "/api/plantas", headers=headers, json={"estado": "operativa"}
     )
@@ -82,7 +92,7 @@ def test_create_plant_requires_nombre(
 def test_create_plant_rejects_long_status(
     validation_client, validation_auth_service: AuthService
 ):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.post(
         "/api/plantas",
         headers=headers,
@@ -96,7 +106,7 @@ def test_create_plant_rejects_long_status(
 def test_update_plant_requires_at_least_one_field(
     validation_client, validation_auth_service: AuthService
 ):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.put("/api/plantas/1", headers=headers, json={})
 
     assert response.status_code == 400
@@ -113,7 +123,7 @@ def test_login_validation_error(validation_client):
 
 
 def test_create_area_requires_nombre(validation_client, validation_auth_service):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.post(
         "/api/plantas/1/areas", headers=headers, json={"estado": "operativa"}
     )
@@ -123,7 +133,7 @@ def test_create_area_requires_nombre(validation_client, validation_auth_service)
 
 
 def test_update_area_requires_fields(validation_client, validation_auth_service):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.put("/api/areas/101", headers=headers, json={})
 
     assert response.status_code == 400
@@ -131,7 +141,7 @@ def test_update_area_requires_fields(validation_client, validation_auth_service)
 
 
 def test_create_equipment_requires_nombre(validation_client, validation_auth_service):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.post(
         "/api/areas/101/equipos", headers=headers, json={"estado": "operativo"}
     )
@@ -141,7 +151,7 @@ def test_create_equipment_requires_nombre(validation_client, validation_auth_ser
 
 
 def test_update_equipment_rejects_long_status(validation_client, validation_auth_service):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.put(
         "/api/equipos/1001", headers=headers, json={"estado": "x" * 60}
     )
@@ -151,7 +161,7 @@ def test_update_equipment_rejects_long_status(validation_client, validation_auth
 
 
 def test_create_system_requires_nombre(validation_client, validation_auth_service):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.post(
         "/api/equipos/1001/sistemas", headers=headers, json={"estado": "operativo"}
     )
@@ -161,7 +171,7 @@ def test_create_system_requires_nombre(validation_client, validation_auth_servic
 
 
 def test_update_system_rejects_long_status(validation_client, validation_auth_service):
-    headers = _auth_headers(validation_auth_service)
+    headers = _auth_headers(validation_auth_service, validation_client)
     response = validation_client.put(
         "/api/sistemas/5001", headers=headers, json={"estado": "y" * 60}
     )

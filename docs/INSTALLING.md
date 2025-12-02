@@ -15,7 +15,7 @@ source .venv/bin/activate  # En Windows: .venv\Scripts\activate
 
 ## 2) Instalar dependencias
 ```bash
-pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv alembic
+pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv alembic flask-jwt-extended
 ```
 
 ## 3) Configurar variables de entorno con `.env`

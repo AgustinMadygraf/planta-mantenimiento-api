@@ -2,7 +2,10 @@
 Path: src/infrastructure/flask/app.py
 """
 
+from datetime import timedelta
+
 from flask import Flask, request, redirect
+from flask_jwt_extended import JWTManager
 from werkzeug.exceptions import HTTPException
 
 from src.infrastructure.flask.auth import AuthService, mask_authorization_header
@@ -53,6 +56,12 @@ def create_app() -> Flask:
     uow_factory = make_uow
 
     auth_service = AuthService(user_repository=user_repository)
+
+    flask_app.config["JWT_SECRET_KEY"] = auth_service.secret_key
+    flask_app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(
+        seconds=auth_service.token_ttl_seconds
+    )
+    JWTManager(flask_app)
 
     flask_app.register_blueprint(
         build_blueprint(repository, uow_factory, auth_service=auth_service)

@@ -35,6 +35,11 @@ Detalles extendidos en `docs/INSTALLING.md` (entorno, variables `DB_*`, ejecucio
 - Las rutas de Flask validan cada payload con los esquemas Pydantic de `src/interface_adapters/schemas`, que escuchan campos en español (`nombre`, `estado`, etc.) pero exponen `name`, `status`, `location`, etc. a los casos de uso.
 - El helper `_validate_payload` se encarga de lanzar `400 Bad Request` con mensajes detallados si algo falta o no cumple los constraints (longitud, valores en blanco). Esto mantiene los controladores ligeros y el contrato fiable.
 
+## Autenticación JWT
+- La aplicación usa `Flask-JWT-Extended` para emitir tokens estándar (`create_access_token`) y validar el header `Authorization: Bearer ...`.
+- Los claims `role`, `areas` y `equipos` se incluyen como `additional_claims` y se convierten en `AuthClaims` antes de pasar a los `ScopeAuthorizer`.
+- Configura `AUTH_SECRET_KEY` y `AUTH_TOKEN_TTL_SECONDS` en `.env`; Flask expone el token TTL en `JWT_ACCESS_TOKEN_EXPIRES` para mantener la caducidad sincronizada.
+
 ## Notas de implementacion
 - Respuestas y errores en espanol para alinear con el frontend.
 - Presenters traducen atributos de dominio a las claves esperadas por el contrato (`nombre`, `plantaId`, `areaId`, `equipoId`).
