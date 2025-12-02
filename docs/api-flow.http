@@ -1,0 +1,16 @@
+### Login (obtener token válido)
+```http
+POST https://localhost:8000/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "superadmin",
+  "password": "superadmin"
+}
+```
+
+### Lista de plantas (usar token generado)
+```http
+GET https://localhost:8000/api/plantas
+Authorization: Bearer {{token_obtenido}}
+```

@@ -170,10 +170,10 @@ class AuthService:
         try:
             data = decode_token(token)
         except ExpiredSignatureError as exc:
-            logger.warning("Token expirado")
+            logger.warning("Token expirado: %s", exc)
             raise Unauthorized("Token expirado") from exc
         except (JWTDecodeError, DecodeError) as exc:
-            logger.warning("Token inválido")
+            logger.warning("Token inválido: %s", exc)
             raise Unauthorized("Token inválido") from exc
 
         role = data.get("role")
