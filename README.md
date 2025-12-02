@@ -43,6 +43,7 @@ Detalles extendidos en `docs/INSTALLING.md` (entorno, variables `DB_*`, ejecucio
 ## Inyección de dependencias
 - `Flask-Injector` se encarga del wiring de `PlantDataRepository`, `UnitOfWorkFactory` y `AuthService` dentro de `create_app` (`src/infrastructure/flask/app.py:66-93`).
 - Mantén las dependencias registradas ahí al modificar repositorios o factories para que el binder tenga una sola fuente de verdad para toda la aplicación.
+- Más detalles y un ejemplo de `UseCaseModule` están documentados en `docs/dependency-injection.md`.
 
 ## Notas de implementacion
 - Respuestas y errores en espanol para alinear con el frontend.

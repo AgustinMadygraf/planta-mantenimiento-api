@@ -5,7 +5,7 @@ y la infraestructura de persistencia, permitiendo que cada caso de uso dependa
 solo de los métodos que necesita.
 """
 
-from typing import Any, Protocol, Sequence
+from typing import Any, Protocol, Sequence, runtime_checkable
 
 from src.entities.area import Area
 from src.entities.equipment import Equipment
@@ -13,6 +13,7 @@ from src.entities.plant import Plant
 from src.entities.system import System
 
 
+@runtime_checkable
 class PlantRepository(Protocol):
     """Expose only plant operations needed by the use cases."""
 
@@ -44,6 +45,7 @@ class PlantRepository(Protocol):
     def delete_plant(self, plant_id: int, *, session: Any | None = None) -> bool: ...
 
 
+@runtime_checkable
 class AreaRepository(Protocol):
     """Contract for manipulating areas within a plant."""
 
@@ -74,6 +76,7 @@ class AreaRepository(Protocol):
     def delete_area(self, area_id: int, *, session: Any | None = None) -> bool: ...
 
 
+@runtime_checkable
 class EquipmentRepository(Protocol):
     """Contract for working with equipment of an area."""
 
@@ -108,6 +111,7 @@ class EquipmentRepository(Protocol):
     ) -> bool: ...
 
 
+@runtime_checkable
 class SystemRepository(Protocol):
     """Contract for managing systems linked to equipment."""
 
@@ -140,6 +144,7 @@ class SystemRepository(Protocol):
     def delete_system(self, system_id: int, *, session: Any | None = None) -> bool: ...
 
 
+@runtime_checkable
 class PlantDataRepository(
     PlantRepository, AreaRepository, EquipmentRepository, SystemRepository, Protocol
 ):

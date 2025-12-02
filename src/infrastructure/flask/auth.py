@@ -11,7 +11,7 @@ from typing import Callable, Iterable, Sequence
 from flask import Request
 from flask_jwt_extended import create_access_token, decode_token
 from flask_jwt_extended.exceptions import JWTDecodeError
-from jwt.exceptions import ExpiredSignatureError
+from jwt.exceptions import DecodeError, ExpiredSignatureError
 from werkzeug.exceptions import Forbidden, Unauthorized
 from werkzeug.security import check_password_hash
 
@@ -172,7 +172,7 @@ class AuthService:
         except ExpiredSignatureError as exc:
             logger.warning("Token expirado")
             raise Unauthorized("Token expirado") from exc
-        except JWTDecodeError as exc:
+        except (JWTDecodeError, DecodeError) as exc:
             logger.warning("Token inválido")
             raise Unauthorized("Token inválido") from exc
 
