@@ -1,11 +1,11 @@
-# Instalación y puesta en marcha
+# Instalacion y puesta en marcha
 
 Sigue estos pasos para configurar el proyecto en un entorno local usando MySQL + SQLAlchemy.
 
 ## Prerrequisitos
 - Python 3.10+
 - Servidor MySQL accesible y un esquema creado (por defecto `planta_mantenimiento`).
-- Dependencias: `fastapi`, `uvicorn`, `flask`, `SQLAlchemy`, `PyMySQL`.
+- Dependencias: `fastapi`, `uvicorn`, `flask`, `SQLAlchemy`, `PyMySQL`, `alembic`.
 
 ## 1) Crear entorno virtual (opcional)
 ```bash
@@ -15,7 +15,7 @@ source .venv/bin/activate  # En Windows: .venv\Scripts\activate
 
 ## 2) Instalar dependencias
 ```bash
-pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv
+pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv alembic
 ```
 
 ## 3) Configurar variables de entorno con `.env`
@@ -23,49 +23,56 @@ pip install fastapi uvicorn flask SQLAlchemy PyMySQL python-dotenv
    ```bash
    cp env.example .env
    ```
-2. Configura la conexión a MySQL:
+2. Configura la conexion a MySQL:
    - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-   - Parámetros de pool (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`, `DB_POOL_RECYCLE`)
+   - Parametros de pool (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`, `DB_POOL_RECYCLE`)
    - Opcional: `DB_ECHO=true` para ver el SQL generado.
-   - Opcional: `DB_URL` si prefieres definir la URL completa (p.ej. `mysql+pymysql://user:pass@host:3306/db`).
+   - Opcional: `DB_URL` con la URL completa.
 3. Ajusta otros valores relevantes:
-   - `CORS_ORIGINS` para permitir tu front-end (lista separada por comas, por defecto `http://localhost:5173`).
-   - **Genera una clave segura para `AUTH_SECRET_KEY`** ejecutando en la terminal:
+   - `CORS_ORIGINS` separada por comas (`http://localhost:5173` por defecto).
+   - Genera una clave segura para `AUTH_SECRET_KEY`:
      ```bash
      python -c "import secrets; print(secrets.token_urlsafe(32))"
      ```
-     Copia el valor generado y asígnalo en `.env`:
-     ```
-     AUTH_SECRET_KEY=<valor_generado>
-     ```
-   - `AUTH_SUPERADMIN_USERNAME` y `AUTH_SUPERADMIN_PASSWORD` para habilitar un usuario de respaldo independiente de MySQL.
+     Copia el valor en `.env`.
+   - Opcional: `AUTH_SUPERADMIN_USERNAME` y `AUTH_SUPERADMIN_PASSWORD`.
 
-Si `.env` no existe, la aplicación usará valores por defecto (adecuados solo para desarrollo). Si algún `DB_*` no es un número válido,
-el arranque se detendrá con un mensaje explicativo.
+Si `.env` no existe, los valores por defecto se usan solo en desarrollo. `DB_*` invalidos terminan la ejecucion con un error.
 
-> Si ves errores como `Access denied for user 'root'@'localhost'`, revisa `DB_USER/DB_PASSWORD` y los permisos de MySQL.
+> Si ves `Access denied for user 'root'@'localhost'`, revisa `DB_USER/DB_PASSWORD` y permisos de MySQL.
 
-## 4) Crear tablas sin migraciones
-Ejecuta el script de arranque para materializar el esquema (incluida la tabla `users` para autenticación):
+## 4) Inicializar la base de datos
+Alembic es el flujo oficial. Usa las mismas definiciones ORM (`Base.metadata` en `src/infrastructure/sqlalchemy/models.py`) y las variables `DB_*`.
+
 ```bash
-python start_db.py
+alembic upgrade head
 ```
-El script usa la configuración de `.env`, crea todas las tablas declaradas en SQLAlchemy y captura errores de conexión mostrando
-mensajes en español con la causa probable.
+
+Tras modificar modelos:
+
+```bash
+alembic revision --autogenerate -m "describe change"
+alembic upgrade head
+```
+
+Revisa el diff autogenerado (tip: asegurate de que `UniqueConstraint`, defaults y `ondelete` quedan correctos).
+
+Si puntos de despliegue ya tienen el esquema correcto (p.ej., creado manualmente antes de Alembic), registra la version sin tocar tablas:
+
+```bash
+alembic stamp head
+```
 
 ## 5) Ejecutar el servidor
-- **FastAPI**: `python run.py` (puerto 8000 por defecto, configurable con `FASTAPI_PORT` en `.env`)
-- **Flask**: `python run_flask.py` (puerto 5000 por defecto, configurable con `FLASK_PORT` en `.env`)
+- **FastAPI**: `python run.py` (puerto 8000 por defecto).
+- **Flask**: `python run_flask.py` (puerto 5000 por defecto).
 
-Ambos entrypoints comparten el mismo repositorio SQLAlchemy y respetan las variables `DB_*` y `AUTH_*` configuradas.
+Ambos entrypoints usan el mismo repositorio SQLAlchemy y respetan `DB_*` y `AUTH_*`.
 
 ## 6) Generar diagrama ER (opcional)
-Si quieres visualizar el modelo entidad-relación:
-
-1. Instala las dependencias opcionales: `pip install eralchemy2 graphviz` y asegúrate de que `dot` esté en tu `PATH`.
-2. Ejecuta el script:
+1. Instala dependencias: `pip install eralchemy2 graphviz` y asegurate de que `dot` este en el PATH.
+2. Ejecuta:
    ```bash
    python scripts/generate_erd.py
    ```
-   Por defecto genera `docs/er_diagram.png` a partir del metadata declarativo. Si defines `DB_URL`, reflejará el esquema real de
-   la base indicada.
+   Por defecto genera `docs/er_diagram.png` a partir del metadata declarativo. Si defines `DB_URL`, refleja el esquema de la base especificada.
